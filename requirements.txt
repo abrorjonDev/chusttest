@@ -6,6 +6,7 @@ charset-normalizer==2.0.12
 cryptography==37.0.2
 defusedxml==0.7.1
 Django==4.0.4
+django-cors-headers==3.12.0
 django-rest-auth==0.9.5
 djangorestframework==3.13.1
 djangorestframework-jwt==1.11.0
@@ -14,6 +15,7 @@ idna==3.3
 oauthlib==3.2.0
 openpyxl==3.0.9
 Pillow==9.1.0
+pkg_resources==0.0.0
 psycopg2-binary==2.9.3
 pycparser==2.21
 PyJWT==1.7.1

@@ -22,14 +22,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-0nd=wy#fu&2ou(iwns!bd86-o=8j4g$*$^%kr73(8ldbkm&ctp'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG')
 
-ALLOWED_HOSTS = ["*"]
-TRUSTED_ORIGINS = ['http://www.chust-test.abrorjonaxmadov.uz', 'http://chust-test.abrorjonaxmadov.uz']
-
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(', ')
+CSRF_TRUSTED_ORIGINS = os.environ.get('TRUSTED_ORIGINS').split(', ')
+CORS_ALLOW_ALL_ORIGINS = True
 # Application definition
 
 INSTALLED_APPS = [
@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'results',
     'rest_framework',
     'rest_framework.authtoken',
-
+    'corsheaders',
     'django.contrib.sites',
     'rest_auth',
 ]
@@ -54,7 +54,9 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'corsheaders.middleware.CorsPostCsrfMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
