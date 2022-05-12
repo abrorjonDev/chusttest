@@ -27,8 +27,8 @@ SECRET_KEY = 'django-insecure-0nd=wy#fu&2ou(iwns!bd86-o=8j4g$*$^%kr73(8ldbkm&ctp
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ["*"]
+TRUSTED_ORIGINS = ['http://www.chust-test.abrorjonaxmadov.uz', 'http://chust-test.abrorjonaxmadov.uz']
 
 # Application definition
 
