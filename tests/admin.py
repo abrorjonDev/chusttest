@@ -1,7 +1,12 @@
 from django.contrib import admin
 
 #local imports
-from .models import QuestionModel, AnswerModel
+from .models import QuestionModel, AnswerModel, Subjects
+
+@admin.register(Subjects)
+class SubjectsAdmin(admin.ModelAdmin):
+    readonly_fields = ('date_created', 'date_modified', 'created_by', 'modified_by')
+    list_display = ('name', 'image', 'created_by', 'modified_by')
 
 
 class AnswersInline(admin.TabularInline):
@@ -17,7 +22,7 @@ class QuestionAdmin(admin.ModelAdmin):
     readonly_fields = ('date_created', 'date_modified', 'created_by', 'modified_by')
     fieldsets = (
         (None, {
-            'fields':('question', 'image')
+            'fields':('question', 'image', 'subject')
         },),
         ('IMPORTANT', {
             'fields':(('created_by', 'date_created'), ('modified_by', 'date_modified'))
@@ -26,8 +31,8 @@ class QuestionAdmin(admin.ModelAdmin):
 
     inlines = [AnswersInline]
 
-    def save_model(self, obj, modeladmin):
-        pass
+    # def save_model(self, obj, modeladmin):
+    #     pass
 
 
 

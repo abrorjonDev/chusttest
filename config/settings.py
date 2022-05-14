@@ -128,6 +128,17 @@ OLD_PASSWORD_FIELD_ENABLED = False
 # REST_USE_JWT = True
 
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization'
+        }
+    },
+}
+
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':(
         'rest_framework.authentication.BasicAuthentication',
@@ -143,8 +154,8 @@ REST_FRAMEWORK = {
     ),
     'DATETIME_FORMAT':'%Y-%m-%d %H-%M-%S',
     'DEFAULT_PARSER_CLASSES': (
-        'rest_framework.parsers.FormParser',
         'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
         'rest_framework.parsers.MultiPartParser',
     )
 }

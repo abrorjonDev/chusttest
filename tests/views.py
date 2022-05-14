@@ -5,8 +5,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 #local imports
-from .models import QuestionModel, AnswerModel
-from .serializers import AnswersListSerializer, TestCreateSerializer, TestListSerializer
+from .models import QuestionModel, AnswerModel, Subjects
+from .serializers import AnswersListSerializer, SubjectSerializer, TestCreateSerializer, TestListSerializer
 from .file_read import read_new_tests
 
 class AllTestsViewSet(ModelViewSet):
@@ -41,4 +41,10 @@ class TestDetailViewSet(ModelViewSet):
     serializer_class = TestListSerializer
 
     
+
+class SubjectsViewSet(ModelViewSet):
+    def get_queryset(self):
+        return Subjects.objects.all()
+    
+    serializer_class = SubjectSerializer
 

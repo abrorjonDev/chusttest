@@ -24,6 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
     path('tests/', include('tests.urls')),
+    path('results/', include('results.urls')),
     path('openapi', get_schema_view(
             title="Statistics App",
             description="API for statistics app",

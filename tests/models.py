@@ -24,11 +24,31 @@ def randomize(objects):
         randomized.update([objects[3], objects[1], objects[2], objects[0]])
     return randomized
 
+class Subjects(BaseModel):
+    name = models.CharField(max_length=300)
+    image = models.ImageField(upload_to="subjects", null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Subject'
+        verbose_name_plural = 'Subjects'
+
+    def __str__(self) -> str:
+        return self.name
 
 class QuestionModel(BaseModel):
+    CLASSES = (
+        ('5', '5-sinf'),
+        ('6', '6-sinf'),
+        ('7', '7-sinf'),
+        ('8', '8-sinf'),
+        ('9', '9-sinf'),
+        ('10', '10-sinf'),
+        ('11', '11-sinf'),
+    )
     question = models.CharField(max_length=10000, null=True, blank=True)
     image = models.ImageField(upload_to="questions", null=True, blank=True)
-
+    subject = models.ForeignKey(Subjects, on_delete=models.SET_NULL, null=True, blank=True)
+    klass = models.CharField(max_length=3, choices=CLASSES, null=True, blank=True)
     class Meta:
         verbose_name = _('Question')
         verbose_name_plural = _('Questions')

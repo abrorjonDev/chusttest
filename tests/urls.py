@@ -2,13 +2,14 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 #local imports
-from .views import TestReadFromFile, AllTestsViewSet
+from .views import TestReadFromFile, AllTestsViewSet, SubjectsViewSet
 
 
 
 
 router = DefaultRouter()
 router.register(r'', AllTestsViewSet, basename="all_tests")
+router.register(r'subjects', SubjectsViewSet, basename="all_subjects")
 
 
 urlpatterns = (
