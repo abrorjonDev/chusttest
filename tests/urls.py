@@ -8,8 +8,8 @@ from .views import TestReadFromFile, AllTestsViewSet, SubjectsViewSet
 
 
 router = DefaultRouter()
-router.register(r'', AllTestsViewSet, basename="all_tests")
 router.register(r'subjects', SubjectsViewSet, basename="all_subjects")
+router.register(r'', AllTestsViewSet, basename="all_tests")
 
 
 urlpatterns = (
