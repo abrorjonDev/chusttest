@@ -79,7 +79,7 @@ class TestCreateView(APIView):
             time_delta = now.minute-test_obj.date_created.minute
             if time_delta < 0:
                 time_delta = 60 + time_delta 
-            serialized_data.update({'time_limit':60, 'remained_time':time_delta})
+            serialized_data.update({'time_limit':60, 'remained_time':60-time_delta})
             return Response(serialized_data, status=200)
         return Response(serializer.errors, status=400)
     
