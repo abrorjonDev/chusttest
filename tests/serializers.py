@@ -24,6 +24,12 @@ class AnswersListSerializer(serializers.ModelSerializer):
 
         extra_kwargs = {}
 
+class AnswersListAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AnswerModel
+        fields = ("pk", "answer", "image", "is_right")
+
+        extra_kwargs = {}
 
 class AnswerDetailSerializer(serializers.ModelSerializer):
     class Meta:
@@ -53,13 +59,13 @@ class QuestionDetailSerializer(serializers.ModelSerializer):
         model = QuestionModel
         fields = "__all__"
 
-
+ 
 class TestListSerializer(serializers.ModelSerializer):
     qanswers = AnswersListSerializer(required=False, many=True)
     created_by = AdminSerializer(required=False, many=False)
     class Meta:
         model = QuestionModel
-        fields = ("pk", "question", "image", "date_created", "date_modified","created_by", "modified_by", "qanswers")
+        fields = ("pk", "question", "subject", "klass", "image", "date_created", "date_modified","created_by", "modified_by", "qanswers")
         extra_kwargs = {
                 "date_created": {'read_only':True},
                 "date_modified": {'read_only':True},
@@ -67,12 +73,23 @@ class TestListSerializer(serializers.ModelSerializer):
                 "modified_by": {'read_only':True},
             }
     
-    def create(self):
-        test = None
-        return test
+    def create(self, validated_data):
+        qanswers = validated_data.pop("qanswers")
+        question = QuestionModel.objects.create(**validated_data, created_by=self.context['request'].user)
+        for answer in qanswers:
+            AnswerModel.objects.create(**answer, question=question, created_by=self.context['request'].user)
+        return question
 
-class TestCreateSerializer(serializers.ModelSerializer):
-    answers = AnswersListSerializer(required=True, many=True)
+    def update(self, instance, validated_data):
+        instance.question = validated_data.get('question', instance.question)
+        instance.subject = validated_data.get('subject', instance.subject)
+        instance.klass = validated_data.get('klass', instance.klass)
+        instance.modified_by = self.context['request'].user
+        instance.save()
+        return instance
+
+class TestAdminListSerializer(serializers.ModelSerializer):
+    qanswers = AnswersListAdminSerializer(required=False, many=True)
     class Meta:
         model = QuestionModel
         fields = "__all__"
@@ -84,9 +101,17 @@ class TestCreateSerializer(serializers.ModelSerializer):
             "modified_by": {'read_only':True},
         }
 
-    def create(self, attrs):
-        answers = attrs.pop('answers')
-        question = QuestionModel.objects.create(**attrs, created_by=self.contet['request'].user)
-        for answer in answers:
-            answer_obj = AnswerModel.objects.create(**answer, question=question)
+    def create(self, validated_data):
+        qanswers = validated_data.pop("qanswers")
+        question = QuestionModel.objects.create(**validated_data, created_by=self.context['request'].user)
+        for answer in qanswers:
+            AnswerModel.objects.create(**answer, question=question, created_by=self.context['request'].user)
         return question
+
+    def update(self, instance, validated_data):
+        instance.question = validated_data.get('question', instance.question)
+        instance.subject = validated_data.get('subject', instance.subject)
+        instance.klass = validated_data.get('klass', instance.klass)
+        instance.modified_by = self.context['request'].user
+        instance.save()
+        return instance

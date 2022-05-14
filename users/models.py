@@ -117,3 +117,10 @@ class UserDocs(BaseModel):
 
     def __str__(self):
         return self.user.full_name 
+
+
+class UserFileModel(BaseModel):
+    file = models.FileField(upload_to="users")
+
+    def __str__(self):
+        return self.created_by.username
