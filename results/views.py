@@ -1,8 +1,11 @@
+from cgi import test
 from django.shortcuts import render, get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import random
 import datetime
+from django.utils import timezone, timesince
+
 from tests.models import QuestionModel
 
 #local imports
@@ -31,8 +34,8 @@ class TestCreateView(APIView):
     #     return serializer[request.method]
     def get(self, request):
         serializer = self.serializer_class(self.get_queryset(), many=True)
-        return Response({}, status=200)
-
+        return Response({}, status=200) 
+ 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -41,8 +44,28 @@ class TestCreateView(APIView):
             tests_count = int(os.environ.get('TEST_COUNT', default=30))
             if QuestionModel.objects.filter(subject=subject).count()<tests_count:
                 return Response({'status':'Bu fan doirasida testlar yetarli emas.', 'status_code':400}, status=200)
-            if StudentTests.objects.filter(created_by=request.user, date_created__gte=datetime.datetime.now()-datetime.timedelta(hours=1)).count()> 0:
-                test_obj = StudentTests.objects.filter(created_by=request.user, date_created__gte=datetime.datetime.now()-datetime.timedelta(hours=1))[0]
+            if StudentTests.objects.filter(created_by=request.user, subject=subject, klass=klass, date_created__gte=datetime.datetime.now()-datetime.timedelta(hours=1)).count()> 0:
+                test_obj = StudentTests.objects.filter(created_by=request.user, subject=subject, klass=klass, finished=False)[0]
+                now=timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
+                if test_obj.date_created < now-datetime.timedelta(hours=1):
+                    print(test_obj.date_created)
+                    print(now)
+                    print(now-datetime.timedelta(hours=1))
+
+                    test_obj.finished = True
+                    test_obj.modified_by = request.user
+                    test_obj.right_answers = test_obj.questions.filter(student_answer__is_right=True).count()
+                    test_obj.save()
+                    test_obj = StudentTests.objects.create(
+                        created_by=request.user, subject=subject, klass=klass)
+                    questions = QuestionModel.objects.filter(subject=subject, klass=klass)
+                    while tests_count > 0:
+                        try:
+                            StudentQuestions.objects.create(test=test_obj, question=random.choice(questions), created_by=request.user)
+                            tests_count -= 1
+                        except:
+                            pass
+
             else:
                 test_obj = StudentTests.objects.create(
                     created_by=request.user, subject=subject, klass=klass)
@@ -54,7 +77,12 @@ class TestCreateView(APIView):
                         tests_count -= 1
                     except:
                         pass
-            serialized_data = self.list_serializer_class(test_obj, many=False).data 
+            serialized_data = self.list_serializer_class(test_obj, many=False).data
+            now = datetime.datetime.now()
+            time_delta = now.minute-test_obj.date_created.minute
+            if time_delta < 0:
+                time_delta = 60 - time_delta 
+            serialized_data.update({'time_limit':60, 'remained_time':time_delta})
             return Response(serialized_data, status=200)
         return Response(serializer.errors, status=400)
     
@@ -86,7 +114,6 @@ class TestUpdateView(APIView):
                 test.modified_by = request.user
                 test.date_modified = datetime.datetime.now()
                 
-                print("in finished")
                 test.right_answers = test.questions.filter(student_answer__is_right=True).count()
                 print(test.right_answers, test.questions.filter(student_answer__is_right=True).count())
                 test.save()
