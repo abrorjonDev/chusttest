@@ -20,6 +20,7 @@ class TestCreateView(APIView):
         return StudentTests.objects.all()
 
     serializer_class = TestCreateSerializer
+    list_serializer_class = TestResultsSerializer
     # def get_serializer_class(self, request):
     #     serializer = {
     #         'GET': TestCreateSerializer, 
@@ -53,7 +54,7 @@ class TestCreateView(APIView):
                         tests_count -= 1
                     except:
                         pass
-            serialized_data = self.serializer_class(test_obj, many=False).data 
+            serialized_data = self.list_serializer_class(test_obj, many=False).data 
             return Response(serialized_data, status=200)
         return Response(serializer.errors, status=400)
     
@@ -65,11 +66,11 @@ class TestUpdateView(APIView):
         return StudentTests.objects.all()
 
     serializer_class = TestCreateSerializer
-
+    list_serializer_class = TestResultsSerializer
     def get(self, request, pk):
         test =  get_object_or_404(StudentTests, pk=pk)
         if test.created_by == request.user or request.user.is_superuser:
-            serializer = self.serializer_class(test, many=False)
+            serializer = self.list_serializer_class(test, many=False)
         else:
             return Response({'error':'You cannot get the test because of authorization. It is not yours.'}, status=200)
         return Response(serializer.data, status=200)
@@ -89,7 +90,7 @@ class TestUpdateView(APIView):
                 test.right_answers = test.questions.filter(student_answer__is_right=True).count()
                 print(test.right_answers, test.questions.filter(student_answer__is_right=True).count())
                 test.save()
-            serializer = self.serializer_class(test, many=False)
+            serializer = self.list_serializer_class(test, many=False)
             print(test.questions.filter(student_answer__is_right=True).count())
             print(test.right_answers, test.questions.count())
             serializer.data.update({'percentage':test.right_answers/test.questions.count()*100})
@@ -104,10 +105,10 @@ class PostStudentAnswer(APIView):
         return StudentQuestions.objects.all()
 
     serializer_class = PostAnswerSerializer
-
+    list_serializer_class = StudentQuestionDetailSerializer
     def get(self, request, pk):
         question = get_object_or_404(StudentQuestions, pk=pk)
-        serializer = self.serializer_class(question, many=False)
+        serializer = self.list_serializer_class(question, many=False)
         return Response(serializer.data, status=200)
 
     def patch(self, request, pk):

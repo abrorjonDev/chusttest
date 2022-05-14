@@ -55,6 +55,9 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):  #
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     
+    school = models.CharField(max_length=300, verbose_name="Организация", null=True, blank=True)
+    klass = models.CharField(max_length=20, default=None, null=True, blank=True)
+
     date_joined = models.DateTimeField(auto_now_add=True)
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
@@ -81,32 +84,36 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):  #
         except:
             return self.username
 
+    # @property
+    # def document(self):
+    #     return self.document.all()
+
 
 class UserDocs(BaseModel):
-    GENRE = (
-        ('e', 'Мужской'),
-        ('a', 'Женский')
-    )
-    birth_date = models.DateField(null=True, blank=True, verbose_name="Дата рождения")
-    genre = models.CharField(max_length=2,null=True, blank=True, choices=GENRE, verbose_name="Пол")
-    nationality = models.CharField(max_length=200, verbose_name="Национальность", null=True, blank=True)
-    citizen = models.CharField(max_length=120, verbose_name="Гражданство", null=True, blank=True)
-    state = models.CharField(max_length=200, verbose_name="Область рождения", null=True, blank=True)
-    region = models.CharField(max_length=100, verbose_name="Район рождения", null=True, blank=True)
+    # GENRE = (
+    #     ('e', 'Мужской'),
+    #     ('a', 'Женский')
+    # )
+    # birth_date = models.DateField(null=True, blank=True, verbose_name="Дата рождения")
+    # genre = models.CharField(max_length=2,null=True, blank=True, choices=GENRE, verbose_name="Пол")
+    # nationality = models.CharField(max_length=200, verbose_name="Национальность", null=True, blank=True)
+    # citizen = models.CharField(max_length=120, verbose_name="Гражданство", null=True, blank=True)
+    # state = models.CharField(max_length=200, verbose_name="Область рождения", null=True, blank=True)
+    # region = models.CharField(max_length=100, verbose_name="Район рождения", null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, related_name="document")
-    doc_type = models.CharField(max_length=220, verbose_name="Тип документа", null=True, blank=True)
-    pinfl = models.CharField(max_length=70, verbose_name="ПИНФЛ", null=True, blank=True)
-    serial = models.CharField(max_length=15, verbose_name="Серия", null=True, blank=True)
-    doc_number = models.CharField(max_length=30, verbose_name="Номер документа", null=True, blank=True)
-    who_gave = models.CharField(max_length=300, verbose_name="Кем выдан", null=True, blank=True)
+    # doc_type = models.CharField(max_length=220, verbose_name="Тип документа", null=True, blank=True)
+    # pinfl = models.CharField(max_length=70, verbose_name="ПИНФЛ", null=True, blank=True)
+    # serial = models.CharField(max_length=15, verbose_name="Серия", null=True, blank=True)
+    # doc_number = models.CharField(max_length=30, verbose_name="Номер документа", null=True, blank=True)
+    # who_gave = models.CharField(max_length=300, verbose_name="Кем выдан", null=True, blank=True)
     school = models.CharField(max_length=300, verbose_name="Организация", null=True, blank=True)
     klass = models.CharField(max_length=20, default=None, null=True, blank=True)
-    state_organ = models.CharField(max_length=100, verbose_name="Область организации", null=True, blank=True)
-    region_organ = models.CharField(max_length=100, verbose_name="Регион организации", null=True, blank=True)
+    # state_organ = models.CharField(max_length=100, verbose_name="Область организации", null=True, blank=True)
+    # region_organ = models.CharField(max_length=100, verbose_name="Регион организации", null=True, blank=True)
 
     class Meta:
         verbose_name = _("Student Info")
         verbose_name_plural = _("Student Infos")
 
     def __str__(self):
-        return self.user.full_name
+        return self.user.full_name 

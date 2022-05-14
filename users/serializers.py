@@ -19,13 +19,14 @@ class UserDocsSerializer(serializers.ModelSerializer):
         exclude = ('user', )
 
 class UserListSerializer(serializers.ModelSerializer):
+    # document = UserDocsSerializer(required=False, many=False)
     class Meta:
         model = User
-        fields = ("id", "username", "first_name", "last_name", "father_name")
+        fields = ("id", "username", "first_name", "last_name", "father_name", 'school', 'klass')
 
 
 class UserDataSerializer(serializers.ModelSerializer):
-    document = UserDocsSerializer(required=False, many=False)
+    # document = UserDocsSerializer(required=False, many=False)
     class Meta:
         model = User
         # fields = "__all__"
@@ -46,7 +47,7 @@ class UserDataSerializer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
-    document = UserDocsSerializer(required=False, many=False)
+    # document = UserDocsSerializer(required=False, many=False)
     class Meta:
         model = User
         fields = "__all__"

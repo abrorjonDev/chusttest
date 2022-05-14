@@ -66,6 +66,10 @@ class TestListSerializer(serializers.ModelSerializer):
                 "created_by": {'read_only':True},
                 "modified_by": {'read_only':True},
             }
+    
+    def create(self):
+        test = None
+        return test
 
 class TestCreateSerializer(serializers.ModelSerializer):
     answers = AnswersListSerializer(required=True, many=True)
