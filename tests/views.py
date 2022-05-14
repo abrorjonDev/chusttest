@@ -22,7 +22,7 @@ class AllTestsViewSet(ModelViewSet):
             return QuestionModel.objects.all()
 
     def get_serializer_class(self, user=None):
-        if user.is_superuser==True:
+        if user and user.is_superuser==True:
             return TestAdminListSerializer
         return TestListSerializer
     permission_classes = (IsAuthenticated, )
@@ -30,7 +30,7 @@ class AllTestsViewSet(ModelViewSet):
     def list(self, request):
         subject = request.query_params.get('subject', None)
         klass = request.query_params.get('klass', None)
-        serializer = self.get_serializer_class(user=request.user)(self.get_queryset(subject=subject, klass=klass), many=True)
+        serializer = self.get_serializer_class(user=request.user)(self.get_queryset(subject=subject, klass=klass), many=True, context={'request':request})
         return Response(serializer.data, status=200)
 
     def create(self, request):
