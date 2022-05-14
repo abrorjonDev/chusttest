@@ -40,3 +40,6 @@ class StudentQuestions(BaseModel):
 
     def __str__(self):
         return self.created_by.username
+
+    class Meta:
+        ordering = ('id', )
