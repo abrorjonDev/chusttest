@@ -77,13 +77,12 @@ def create_students(file, created_by=None):
             created +=1
 
         except Exception as e:
-            print("Error occured in read student datas :{}".format(e))
-            #student
             student = User.objects.get_or_create(username=username)[0]
-            
             student.first_name=full_name.split(" ")[1]
             student.last_name=full_name.split(" ")[0]
             student.modified_by = created_by
+            student.school = school
+            student.klass = klass
             if not student.password:
                 print("password saved")
                 student.set_password('1')

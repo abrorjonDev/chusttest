@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 #local imports
-from .models import User, UserDocs
+from .models import User, UserDocs, UserFileModel
 
 class UserCreationForm(forms.ModelForm):
     """A form for creating new users. Includes all the required
@@ -79,3 +79,9 @@ class UserAdmin(DjangoUserAdmin):
         
     )
     inlines = [DocsInline]
+
+
+@admin.register(UserFileModel)
+class UserFileAdmin(admin.ModelAdmin):
+    list_filter = ('file', 'created_by', 'modified_by','date_created')
+    

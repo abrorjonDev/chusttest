@@ -4,7 +4,7 @@ from .models import QuestionModel, AnswerModel
 
 
 
-def read_new_tests(file, request):
+def read_new_tests(file, request, subject=None, klass=None):
     wb = load_workbook(file)
     ws = wb.active
     letters, blank_limit = 'CDEF', 4
@@ -19,7 +19,7 @@ def read_new_tests(file, request):
                 #     print(question_obj)
                 # except:
                 #     print("Question model creating..")
-                question_obj = QuestionModel.objects.get_or_create(question=question, created_by=request.user)
+                question_obj = QuestionModel.objects.get_or_create(question=question, created_by=request.user, klass=klass, subject_id=subject)
                 for letter in letters:
                     answer = ws["{}{}".format(letter, i)].value
                     if answer and letter=="C":
