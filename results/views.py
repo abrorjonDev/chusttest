@@ -44,14 +44,11 @@ class TestCreateView(APIView):
             tests_count = int(os.environ.get('TEST_COUNT', default=30))
             if QuestionModel.objects.filter(subject=subject).count()<tests_count:
                 return Response({'status':'Bu fan doirasida testlar yetarli emas.', 'status_code':400}, status=200)
-            if StudentTests.objects.filter(created_by=request.user, subject=subject, klass=klass, date_created__gte=datetime.datetime.now()-datetime.timedelta(hours=1)).count()> 0:
+            now=timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
+            if StudentTests.objects.filter(created_by=request.user, subject=subject, klass=klass, date_created__gte=now-datetime.timedelta(hours=1)).count()> 0:
                 test_obj = StudentTests.objects.filter(created_by=request.user, subject=subject, klass=klass, finished=False)[0]
-                now=timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
+                
                 if test_obj.date_created < now-datetime.timedelta(hours=1):
-                    print(test_obj.date_created)
-                    print(now)
-                    print(now-datetime.timedelta(hours=1))
-
                     test_obj.finished = True
                     test_obj.modified_by = request.user
                     test_obj.right_answers = test_obj.questions.filter(student_answer__is_right=True).count()
