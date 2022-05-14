@@ -17,8 +17,8 @@ class AllTestsViewSet(ModelViewSet):
     # def list(self, request):
     #     return Response({'status':'new tests created'}, status=201)
 
-    # def create(self, request):
-    #     return Response({'status':'new tests created'}, status=201)
+    def create(self, request):
+        return Response({'status':'new tests created'}, status=201)
 
 
 class TestReadFromFile(APIView):
