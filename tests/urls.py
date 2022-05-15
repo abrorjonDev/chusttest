@@ -2,7 +2,12 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 #local imports
-from .views import TestReadFromFile, AllTestsViewSet, SubjectsViewSet, AnswersViewSet
+from .views import (
+    TestReadFromFile, 
+    AllTestsViewSet, 
+    SubjectsViewSet, 
+    AnswersViewSet,
+    )
 
 
 

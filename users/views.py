@@ -26,7 +26,24 @@ class LoginView(APIView):
             password = serializer.validated_data.get('password')
             return Response({'status':200, 'token':'token'}, status=200)
         return Response({'status':401, 'token':None}, status=400) 
-         
+
+class UserDetailView(APIView):
+    def get_queryset(self):
+        return User.objects.exclude(Q(is_superuser=True)|Q(is_staff=True))
+    serializer_class = UserDataSerializer
+
+    def get(self, request):
+        serializer = self.serializer_class(request.user, many=False)
+        return Response(serializer.data, status=200)
+    
+    def patch(self, request):
+        serializer = self.serializer_class(request.user, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+
 
 class StudentsListView(APIView):
     def get_queryset(self):
