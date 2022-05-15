@@ -24,6 +24,11 @@ class AnswersListSerializer(serializers.ModelSerializer):
 
         extra_kwargs = {}
 
+class AnswersFullAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AnswerModel
+        fields = "__all__"
+
 class AnswersListAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnswerModel
