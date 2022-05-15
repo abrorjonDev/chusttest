@@ -6,14 +6,14 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 
 #local imports
 from .models import QuestionModel, AnswerModel, Subjects
-from .serializers import AnswersListSerializer, SubjectSerializer, TestAdminListSerializer, TestListSerializer, AnswersListAdminSerializer
+from .serializers import AnswersListSerializer, SubjectSerializer, TestAdminListSerializer, TestListSerializer, AnswersFullAdminSerializer
 from .file_read import read_new_tests
 
 
 class AnswersViewSet(ModelViewSet):
     def get_queryset(self):
         return AnswerModel.objects.all()
-    serializer_class = AnswersListAdminSerializer
+    serializer_class = AnswersFullAdminSerializer
     permission_classes = (IsAdminUser, )
 
  
