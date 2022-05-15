@@ -2,12 +2,13 @@ from django.urls import path, include
 from rest_auth.views import LoginView, LogoutView, PasswordChangeView, PasswordResetView, PasswordResetConfirmView
 
 # local imports
-from .views import StudentsListView, StudentDetailView, FileUpload
+from .views import StudentsListView, StudentDetailView, FileUpload, UserDetailView
 
 
 
 urlpatterns = [
     path("students/", StudentsListView.as_view(), name="students_list"),
+    path('me/', UserDetailView.as_view(), name="user_data"),
     path("students/create/", FileUpload.as_view(), name="file_upload_student_create"),
     path("students/<int:pk>/", StudentDetailView.as_view(), name="student_detail"),
     path('login/', LoginView.as_view(), name="login"),
