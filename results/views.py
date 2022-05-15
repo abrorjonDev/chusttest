@@ -16,7 +16,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
- 
+
 
 class TestCreateView(APIView):
     def get_queryset(self):
@@ -24,16 +24,9 @@ class TestCreateView(APIView):
 
     serializer_class = TestCreateSerializer
     list_serializer_class = TestResultsSerializer
-    # def get_serializer_class(self, request):
-    #     serializer = {
-    #         'GET': TestCreateSerializer, 
-    #         'POST': TestCreateSerializer,
-    #         'PUT': TestCreateSerializer,
-    #         'PATCH': TestCreateSerializer
-    #     }
-    #     return serializer[request.method]
+    
     def get(self, request):
-        serializer = self.serializer_class(self.get_queryset(), many=True)
+        # serializer = self.serializer_class(self.get_queryset(), many=True)
         return Response({}, status=200) 
  
     def post(self, request):
@@ -42,44 +35,45 @@ class TestCreateView(APIView):
             klass = serializer.validated_data.get('klass', None)
             subject = serializer.validated_data.get('subject', None)
             tests_count = int(os.environ.get('TEST_COUNT', default=30))
-            if QuestionModel.objects.filter(subject=subject).count()<tests_count:
-                return Response({'status':'Bu fan doirasida testlar yetarli emas.', 'status_code':400}, status=200)
-            now=timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
-            if StudentTests.objects.filter(created_by=request.user, subject=subject, klass=klass, date_created__gte=now-datetime.timedelta(hours=1)).count()> 0:
-                test_obj = StudentTests.objects.filter(created_by=request.user, subject=subject, klass=klass, finished=False)[0]
-                
-                if test_obj.date_created < now-datetime.timedelta(hours=1):
-                    test_obj.finished = True
-                    test_obj.modified_by = request.user
-                    test_obj.right_answers = test_obj.questions.filter(student_answer__is_right=True).count()
-                    test_obj.save()
-                    test_obj = StudentTests.objects.create(
-                        created_by=request.user, subject=subject, klass=klass)
-                    questions = QuestionModel.objects.filter(subject=subject, klass=klass)
-                    while tests_count > 0:
-                        try:
-                            StudentQuestions.objects.create(test=test_obj, question=random.choice(questions), created_by=request.user)
-                            tests_count -= 1
-                        except:
-                            pass
 
+            #if the questions related to the selected subject and klass aren't enough 
+            # return not enough status 
+            if QuestionModel.objects.filter(subject=subject, klass=klass).count()<tests_count:
+                return Response({'status':'Bu fan va sinf doirasida testlar yetarli emas.', 'status_code':400}, status=200)
+
+            now=timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
+            student_tests = StudentTests.objects.filter(
+                created_by=request.user, 
+                subject=subject, klass=klass, 
+                date_created__gte=now-datetime.timedelta(hours=1), finished=False)
+            
+            #last created tests by student
+            if student_tests.count() > 0:
+                test_obj = student_tests.first()
+                
+            # new creating tests                
             else:
                 test_obj = StudentTests.objects.create(
                     created_by=request.user, subject=subject, klass=klass)
-                questions = QuestionModel.objects.filter(subject=subject)
-                while tests_count > 0:
-                    print(tests_count)
-                    try:
-                        StudentQuestions.objects.create(test=test_obj, question=random.choice(questions), created_by=request.user)
-                        tests_count -= 1
-                    except:
-                        pass
+                
+                questions = QuestionModel.objects.filter(subject=subject, klass=klass)
+                
+                random_questions = []
+                while len(random_questions) < tests_count:
+                    question=random.choice(questions)
+                    while question in random_questions:
+                        question=random.choice(questions)
+                    random_questions.append(question)
+                    StudentQuestions.objects.create(test=test_obj, question=question, created_by=request.user)
+
             serialized_data = self.list_serializer_class(test_obj, many=False).data
-            now = datetime.datetime.now()
+
+            now=timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
             time_delta = now.minute-test_obj.date_created.minute
             if time_delta < 0:
                 time_delta = 60 + time_delta 
             serialized_data.update({'time_limit':60, 'remained_time':60-time_delta})
+
             return Response(serialized_data, status=200)
         return Response(serializer.errors, status=400)
     
@@ -92,6 +86,7 @@ class TestUpdateView(APIView):
 
     serializer_class = TestCreateSerializer
     list_serializer_class = TestResultsSerializer
+    
     def get(self, request, pk):
         test =  get_object_or_404(StudentTests, pk=pk)
         if test.created_by == request.user or request.user.is_superuser:
