@@ -9,8 +9,9 @@ from .views import TestReadFromFile, AllTestsViewSet, SubjectsViewSet, AnswersVi
 
 router = DefaultRouter()
 router.register(r'subjects', SubjectsViewSet, basename="all_subjects")
-router.register(r'', AllTestsViewSet, basename="all_tests")
 router.register(r'answers', AnswersViewSet, basename="answers_api")
+router.register(r'', AllTestsViewSet, basename="all_tests")
+
 
 
 urlpatterns = (
