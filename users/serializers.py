@@ -42,6 +42,10 @@ class UserDataSerializer(serializers.ModelSerializer):
             instance.last_name = attrs.get('last_name', instance.last_name)
         if 'father_name' in keys:
             instance.father_name = attrs.get('father_name', instance.father_name) 
+        if 'school' in keys:
+            instance.school = attrs.get('school', instance.school)
+        if 'klass' in keys:
+            instance.klass = attrs.get('klass', instance.klass)
         instance.save()
         return instance
 
