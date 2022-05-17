@@ -37,6 +37,10 @@ class Subjects(BaseModel):
 
 class QuestionModel(BaseModel):
     CLASSES = (
+        ('1', '1-sinf'),
+        ('2', '2-sinf'),
+        ('3', '3-sinf'),
+        ('4', '4-sinf'),
         ('5', '5-sinf'),
         ('6', '6-sinf'),
         ('7', '7-sinf'),
@@ -55,7 +59,6 @@ class QuestionModel(BaseModel):
 
     @property
     def qanswers(self):
-        # objects = self.answers.all()
         return self.answers.order_by('answer', '-id')
             
 

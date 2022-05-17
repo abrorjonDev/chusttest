@@ -13,6 +13,7 @@ from django.contrib.auth.hashers import PBKDF2PasswordHasher
 from .serializers import LoginSerializer, UserDataSerializer, UserListSerializer
 from .file_read import create_students
 from .models import UserFileModel
+from .tasks import student_register_by_file
 class LoginView(APIView):
     serializer_class = LoginSerializer
     parser_classes = (MultiPartParser, FormParser, JSONParser)
@@ -116,6 +117,8 @@ class FileUpload(APIView):
 
     def post(self, request):
         file = request.data['file']
-        file_model = UserFileModel.objects.create(file=file, created_by=request.user)
-        # student_status = create_students(file=file, created_by=request.user)
-        return Response({"status":"File has been uploaded."}, status=200)
+        user=request.user
+        # file_model = UserFileModel.objects.create(file=file, created_by=request.user)
+        # student_register_by_file.delay(file, user)
+        student_status = create_students(file=file, created_by=request.user)
+        return Response(student_status, status=200)
