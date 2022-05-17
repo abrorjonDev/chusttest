@@ -2,8 +2,16 @@ from django.contrib import admin
 from django import forms
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from import_export.resources import ModelResource
+from import_export.admin import ImportExportModelAdmin
 #local imports
 from .models import User, UserDocs, UserFileModel
+
+class UserResource(ModelResource):
+    class Meta:
+        model = User
+     
+
 
 class UserCreationForm(forms.ModelForm):
     """A form for creating new users. Includes all the required
@@ -60,7 +68,8 @@ class DocsInline(admin.StackedInline):
     fk_name = "user"
 
 @admin.register(User)
-class UserAdmin(DjangoUserAdmin):
+class UserAdmin(ImportExportModelAdmin, DjangoUserAdmin):
+    resource_class = UserResource
     list_display = ('username', 'first_name', 'last_name', 'is_superuser', 'is_staff')
     readonly_fields = ('date_joined', 'last_login')
     add_form = UserCreationForm

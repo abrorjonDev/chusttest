@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django.contrib.sites',
     'rest_auth',
+    'import_export',
 ]
 SITE_ID = 1
 
@@ -196,7 +197,17 @@ STATIC_ROOT = BASE_DIR.joinpath('static')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR.joinpath('media')
+
+#IMPORT_EXPORT
+IMPORT_EXPORT_USE_TRANSACTIONS = True
+
+#CELERY
+CELERY_ACCEPT_CONTENT = ['multipart/form-data', 'application/json', 'application/x-www-form-urlencoded']
+CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_TASK_SERIALIZER = 'yaml'  #'json', 'pickle', 'msgpack'(Experimental)
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# DATA_UPLOAD_MAX_NUMBER_FIELDS = 60000
