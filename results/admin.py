@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import StudentTests, StudentQuestions
+from .models import OlympicResults, OlympicStudentTests, Olympics, OlympicsSubjects, StudentTests, StudentQuestions
 
 
 
@@ -16,3 +16,8 @@ class StudentQuestionsAdmin(admin.ModelAdmin):
     list_display = ('question', 'created_by', 'modified_by')
 
 
+admin.site.register(OlympicResults)
+admin.site.register(Olympics)
+
+admin.site.register(OlympicsSubjects)
+admin.site.register(OlympicStudentTests)
