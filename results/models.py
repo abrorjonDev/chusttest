@@ -47,3 +47,74 @@ class StudentQuestions(BaseModel):
 
     class Meta:
         ordering = ('id', )
+
+
+####### OLYMPICS ##################################
+
+class Olympics(BaseModel):
+    title = models.CharField(max_length=1000)
+    image = models.ImageField(upload_to="olympics", null=True, blank=True)
+    text = models.TextField()
+    time_start = models.DateTimeField()
+    time_end = models.DateTimeField()
+
+    class Meta:
+        verbose_name = "Olympic"
+        verbose_name_plural = "Olympics"
+
+    @property
+    def subjects(self):
+        return self.subjects.all()
+
+    @property
+    def results(self):
+        return self.results.all()
+
+    def __str__(self):
+        return self.title
+
+class OlympicsSubjects(BaseModel):
+    olympics = models.ForeignKey(Olympics, on_delete=models.SET_NULL, null=True, blank=True, related_name="subjects")
+    subject = models.ForeignKey(Subjects, on_delete=models.SET_NULL, null=True, blank=True)
+    questions_count = models.IntegerField()
+    ball = models.FloatField(default=1.1)
+
+    class Meta:
+        verbose_name = "Olympic Subject"
+        verbose_name_plural = "Olympic Subjects"
+
+    def __str__(self):
+        return self.subject.name
+
+
+class OlympicResults(BaseModel):
+    olympics = models.ForeignKey(Olympics, on_delete=models.SET_NULL, null=True, blank=True, related_name="results")
+    ball = models.FloatField(null=True, blank=True)
+    finished = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Olympic Result"
+        verbose_name_plural = "Olympic Results"
+
+    def __str__(self) -> str:
+        return self.student.full_name
+
+    @property
+    def questions(self):
+        return self.tests.all()
+
+
+
+
+class OlympicStudentTests(BaseModel):
+    result = models.ForeignKey(OlympicResults, on_delete=models.CASCADE, related_name="tests")
+    question = models.ForeignKey(QuestionModel, on_delete=models.CASCADE)
+    student_answer = models.ForeignKey(AnswerModel, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        verbose_name = "Olympic Test"
+        verbose_name = "Olympic Tests"
+
+    def __str__(self) -> str:
+        return self.result.student.full_name
+

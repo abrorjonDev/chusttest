@@ -166,7 +166,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer'
     ),
-    'DATETIME_FORMAT':'%Y-%m-%d %H-%M-%S',
+    'DATETIME_FORMAT':'%Y-%m-%d %H:%M:%S',
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework.parsers.JSONParser',
         'rest_framework.parsers.FormParser',

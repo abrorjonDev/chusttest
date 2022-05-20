@@ -1,15 +1,14 @@
-from cgi import test
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAdminUser
 import random
 import datetime
-from django.utils import timezone, timesince
-
-from tests.models import QuestionModel
+from django.utils import timezone
 
 #local imports
-from .models import StudentQuestions, StudentTests
+from tests.models import QuestionModel
+from .models import StudentQuestions, StudentTests, OlympicStudentTests
 from .serializers import *
 
 import os
@@ -65,7 +64,8 @@ class TestCreateView(APIView):
                         question=random.choice(questions)
                     random_questions.append(question)
                     StudentQuestions.objects.create(test=test_obj, question=question, created_by=request.user)
-
+                del questions   # delete the list after being used
+                del random_questions
             serialized_data = self.list_serializer_class(test_obj, many=False).data
 
             now=timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
@@ -153,4 +153,217 @@ class StudentResultsView(APIView):
 
 
 
+###########    OLYMPICS     ##################################################
+ 
+class OlympicsView(APIView):
+    """
+    This API is only for admin.
+    Only Admin can create and see the olympics objects.
+    For seeing and creating the olympics objects login as admin and use the key that was sent in the succesfull login response. 
+    """
+    def get_queryset(self):
+        return Olympics.objects.all()
+    permission_classes = (IsAdminUser, )
+    
+    def get_serializer_class(self):
+        return OlympicSerializer
 
+    def get(self, request):
+        serializer = self.get_serializer_class()(self.get_queryset(), many=True)
+        return Response(serializer.data, status=200)
+
+    def post(self, request):
+        serializer = self.get_serializer_class()(data=request.data, context={'request':request})
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response(serializer.data, status=201)
+
+
+class OlympicsDetailView(APIView):
+    """
+        This API is only for admin. 
+        It is used for seeing, updating and deleting
+        any one of available olympics objects.
+        Use Token, which is sent in succesfull login response as "key",  in header.
+    """
+    def get_queryset(self):
+        return Olympics.objects.all()
+    permission_classes = (IsAdminUser, )
+    
+    def get_serializer_class(self):
+        return OlympicSerializer
+
+    def get(self, request, pk):
+        olympic = get_object_or_404(Olympics, pk=pk)
+        serializer = self.get_serializer_class()(olympic, many=False)
+        return Response(serializer.data, status=200)
+
+    def patch(self, request, pk):
+        olympic = get_object_or_404(Olympics, pk=pk)
+        serializer = self.get_serializer_class()(olympic, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response(serializer.data, status=201)
+
+    def put(self, request, pk):
+        olympic = get_object_or_404(Olympics, pk=pk)
+        serializer = self.get_serializer_class()(olympic, data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response(serializer.data, status=201)
+
+    def delete(self, request, pk):
+        olympic = get_object_or_404(Olympics, pk=pk)
+        if olympic:
+            olympic.delete()
+            return Response({'status':'successfully deleted'}, status=200)
+        return Response({'detail':'Not Found'}, status=404)
+
+
+class OlympicResultsView(APIView):
+
+    """
+    This API is used for getting the results of the olympics by admin.
+    Other users get forbidden status in response.
+    Token is required.
+    """
+
+    def get_queryset(self, pk=None):
+        if pk:
+            return OlympicResults.objects.filter(olympics_id=pk)
+        return OlympicResults.objects.all()
+
+    permission_classes = (IsAdminUser, )
+    
+    def get_serializer_class(self, user=None):
+        if user and user.is_staff==True:
+            return OlympicResultsListSerializer
+        return OlympicResultsSerializer
+
+    def get(self, request, pk):
+        # pk = request.query_params.get('olympics', None)
+        serializer = self.get_serializer_class()(self.get_queryset(pk=pk), many=True)        
+        return Response(serializer.data, status=200)
+
+    def patch(self, request, pk):
+        return Response({}, status=200)
+
+    def delete(self, request, pk):
+        return Response({'status':'deleted succesfully.'}, status=200)
+
+    
+class OlympicTestCreateView(APIView):
+    """
+    This API is used by all authorized users.
+    POST this attributes:  "subject", "klass", "olympics" and you will get response which include the tests with answers.
+    Token is required or you will get the unauthorized status instead of your tests.
+    """
+
+    def get_queryset(self):
+        return OlympicResults.objects.all()
+
+    serializer_class = OlympicResultsSerializer
+
+    def post(self, request):
+        subject_id = request.POST.get('subject', None)
+        klass = request.POST.get('klass', None)
+        olympics_id = request.POST.get('olympics', None)
+        
+        olympics = get_object_or_404(Olympics, pk=olympics_id)
+        subject = get_object_or_404(Olympics, pk=olympics_id)
+        
+        student_result_obj = OlympicResults.objects.create(
+            olympics=olympics, created_by=request.user
+            )
+        questions = QuestionModel.objects.filter(klass=klass, subject=subject)
+        
+        # if not enough tests for the subject?
+        questions_count = olympics.subjects.get(subject_id=subject_id).questions_count
+        if questions.count() < questions_count:
+            return Response({
+                'detail':' Sorry! Test questions are not enough.'
+                }, status=200)
+        
+        #else tests are enough, good luck
+        student_tests = []
+        random_questions = []
+        while len(random_questions) < questions_count:
+            question=random.choice(questions)
+            while question in random_questions:
+                question=random.choice(questions)
+            random_questions.append(question)
+            student_olympic_question = OlympicStudentTests(
+                result=student_result_obj,
+                question=question,
+                created_by=request.user
+            )
+            student_tests.append(student_olympic_question)
+        OlympicStudentTests.objects.bulk_create(student_tests)
+
+        #tests have been created.
+        #return student tests
+        serializer = self.serializer_class(student_result_obj, many=False)        
+        return Response(serializer.data, status=201) 
+
+
+class OlympicTestDetailView(APIView):
+    
+    """
+    This API is used for GET, PUT, PATCH methods.
+    Of course, token is required or you will get unauthorized status.
+    """
+
+    def get_queryset(self, pk):
+        return OlympicResults.objects.get(pk=pk)
+    serializer_class = OlympicResultsSerializer
+    def get(self, request, pk):
+        olympic_result_obj = get_object_or_404(OlympicResults, pk=pk)
+        if not olympic_result_obj:
+            return Response({"detail":"Not found"}, status=404)
+        if olympic_result_obj.created_by==request.user or request.user.is_staff:
+            serializer = self.serializer_class(self.get_queryset(pk=pk), many=False)
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+    def patch(self, request, pk):
+        olympic_result_obj = get_object_or_404(OlympicResults, pk=pk)
+        serializer = self.serializer_class(olympic_result_obj, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+    def delete(self, request, pk):
+        olympic_result_obj = get_object_or_404(OlympicResults, pk=pk)
+        if not olympic_result_obj:
+            return Response({"detail":"Not found"}, status=404)
+        if request.user.is_staff:
+            olympic_result_obj.delete()
+            return Response({"detail":"deleted succesfully."}, status=200)
+        return Response({"detail":"You haven't this permission to delete the test object."}, status=403)
+    
+class OlympicStudentAnswerView(APIView):
+
+    """
+    This API is used for posting student answers to olympic tests.
+    The Allowed methods are GET, PATCH.
+    Token is required.
+    """
+
+    def get_object(self, pk):
+        return get_object_or_404(OlympicStudentTests, pk=pk)
+    serializer_class = OlympicStudentTestsSerializer
+    
+    def get(self, request, pk):
+        object = self.get_object(pk=pk)
+        serializer = self.serializer_class(object, many=False)
+        return Response(serializer.data, status=200)
+
+    def patch(self, request, pk):
+        object = self.get_object(pk=pk)
+        serializer = self.serializer_class(object,data=request.data,partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+                

@@ -1,19 +1,16 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from uritemplate import partial
-User = get_user_model()
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAdminUser
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from django.db.models import Q
-from django.contrib.auth.hashers import PBKDF2PasswordHasher
 #local imports
 from .serializers import LoginSerializer, UserDataSerializer, UserListSerializer
 from .file_read import create_students
-from .models import UserFileModel
-from .tasks import student_register_by_file
+
+User = get_user_model()
+
 class LoginView(APIView):
     serializer_class = LoginSerializer
     parser_classes = (MultiPartParser, FormParser, JSONParser)
@@ -47,14 +44,23 @@ class UserDetailView(APIView):
 
 
 class StudentsListView(APIView):
-    def get_queryset(self):
+    def get_queryset(self, school=None, klass=None):
+        if school and klass:
+            return User.objects.filter(school=school, klass=klass)
+        elif school:
+            return User.objects.filter(school=school)
+        elif klass:
+            return User.objects.filter(klass=klass)
         return User.objects.exclude(Q(is_superuser=True)|Q(is_staff=True))
 
-    serializer_class = UserListSerializer #UserDataSerializer
+    serializer_class = UserListSerializer
     permission_classes = (IsAdminUser, )
 
     def get(self, request):
-        serializer = self.serializer_class(self.get_queryset(), many=True)
+        school = request.query_params.get("school", None)
+        klass = request.query_params.get("klass", None)
+
+        serializer = self.serializer_class(self.get_queryset(school=school, klass=klass), many=True)
         return Response(serializer.data, status=200)
 
     def post(self, request):
@@ -112,13 +118,10 @@ class FileUpload(APIView):
     post file in multipart/form-data.
     """
     queryset = None
-    # parser_classes = (MultiPartParser, )
+    parser_classes = (MultiPartParser, FormParser)
     permission_classes = (IsAdminUser, )
 
     def post(self, request):
         file = request.data['file']
-        user=request.user
-        # file_model = UserFileModel.objects.create(file=file, created_by=request.user)
-        # student_register_by_file.delay(file, user)
         student_status = create_students(file=file, created_by=request.user)
         return Response(student_status, status=200)
