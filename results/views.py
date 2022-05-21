@@ -1,11 +1,12 @@
 from django.shortcuts import get_object_or_404
+from requests import request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser
 import random
 import datetime
 from django.utils import timezone
-
+ 
 #local imports
 from tests.models import QuestionModel
 from .models import StudentQuestions, StudentTests, OlympicStudentTests
@@ -18,15 +19,16 @@ load_dotenv()
 
 
 class TestCreateView(APIView):
-    def get_queryset(self):
-        return StudentTests.objects.all()
+    def get_queryset(self, user=None):
+        return StudentTests.objects.filter(created_by=user)
 
     serializer_class = TestCreateSerializer
     list_serializer_class = TestResultsSerializer
     
     def get(self, request):
-        # serializer = self.serializer_class(self.get_queryset(), many=True)
-        return Response({}, status=200) 
+        queryset = self.get_queryset(user=request.user)
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data, status=200)
  
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -102,16 +104,11 @@ class TestUpdateView(APIView):
             finished = request.data.get('finished')
             if finished:
                 test.finished = True
-                
                 test.modified_by = request.user
                 test.date_modified = datetime.datetime.now()
-                
                 test.right_answers = test.questions.filter(student_answer__is_right=True).count()
-                print(test.right_answers, test.questions.filter(student_answer__is_right=True).count())
                 test.save()
             serializer = self.list_serializer_class(test, many=False)
-            print(test.questions.filter(student_answer__is_right=True).count())
-            print(test.right_answers, test.questions.count())
             serializer.data.update({'percentage':test.right_answers/test.questions.count()*100})
             return Response({'status':'finished', 'percentage':round(test.right_answers/test.questions.count()*100, ndigits=2)}, status=200)
         return Response(serializer.errors, status=400)
@@ -142,18 +139,85 @@ class PostStudentAnswer(APIView):
 
 
 class StudentResultsView(APIView):
-    def get_queryset(self):
+    """
+    This API is used for getting all tests answered by pupils.
+    Token is required.
+    Only Admin can see it.
+    """
+    def get_queryset(self, user=None):
+        if user:
+            return StudentTests.objects.filter(created_by=user)
         return StudentTests.objects.all()
 
+    permission_classes = (IsAdminUser, )
+    serializer_class = TestResultsAdminSerializer
+
     def get(self, request):
-        return Response({}, status=200)
+        user = request.query_params.get('user', None)
+        queryset = self.get_queryset(user=user)
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data, status=200)
 
+
+class StudentStatisticsView(APIView):
+    """
+    This API is used for getting student results in current month.
+    Token is required.
+    """
+    def get_queryset(self, user=None, subject=None):
+        curr_time=timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
+        if user and subject:
+            return StudentResults.objects.filter(created_by=user, date_created__month=curr_time.month, date_created__year=curr_time.year, subject_id=subject)
+        if user:
+            return StudentResults.objects.filter(created_by=user, date_created__month=curr_time.month, date_created__year=curr_time.year)
+        return None
+
+    serializer_class = StudentResultsSerializer
+    post_serializer_class = StudentResultsPostSerializer
+    
+    def get(self, request):
+        subject = request.query_params.get('subject', None)
+        queryset = self.get_queryset(user=request.user, subject=subject)
+        serializer = self.serializer_class(queryset, many=True)
+        average_percentage = sum([res.percentage for res in queryset])/queryset.count() if queryset.count()>0 else 0.0
+        data = {'average_percentage':round(average_percentage, 2),
+                'results':serializer.data 
+                }
+        return Response(data, status=200)
+    
     def post(self, request):
-        return Response({}, status=200)
+        serializer = self.post_serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
 
 
+class StatisticsView(APIView):
+    """
+    This API is used for getting Percentages about pupils results in months.
+    Only admin can see this api.
+    """
+    def get_queryset(self, subject=None):
+        curr_time=timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
+        if subject:
+            return MonthlyStatistics.objects.filter(subject_id=subject)
+        return MonthlyStatistics.objects.filter(date_created__month=curr_time.month, date_created__year=curr_time.year)
+    
+    serializer_class = MonthlyStatisticsSerializer
+    permission_classes = (IsAdminUser, )
 
-###########    OLYMPICS     ##################################################
+    def get(self, request):            
+        subject = request.query_params.get('subject', None)
+        result = self.get_queryset(subject=subject)
+        serializer = self.serializer_class(result, many=True)
+        average_percentage = sum([res.percentage for res in result])/result.count() if result.count()>0 else 0.0
+        data = {'average_percentage':round(average_percentage, 2),
+                'results':serializer.data 
+                }
+        return Response(data, status=200)
+
+###########    OLYMPICS   ##################################################
  
 class OlympicsView(APIView):
     """

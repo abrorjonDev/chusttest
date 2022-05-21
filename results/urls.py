@@ -7,15 +7,20 @@ from .views import (
     TestUpdateView, 
     PostStudentAnswer,
 
+    StudentStatisticsView,
+    StudentResultsView,
+    StatisticsView,
+
+
     OlympicsView,
     OlympicsDetailView,
     OlympicResultsView,
     OlympicTestCreateView,
     OlympicTestDetailView,
-    OlympicStudentAnswerView
+    OlympicStudentAnswerView,
 )
-
-
+ 
+ 
 
 router = DefaultRouter()
 
@@ -25,6 +30,10 @@ urlpatterns = (
     path('tests/', TestCreateView.as_view(), name="test_create_api"),
     path('tests/<int:pk>/', TestUpdateView.as_view(), name="test_update_api"),
     path('tests/answer/<int:pk>/', PostStudentAnswer.as_view(), name="post_student_answer"),
+
+    path('statistics/me/', StudentStatisticsView.as_view(), name="student_statistics_api"),
+    path('statistics/students/', StudentResultsView.as_view(), name="all_students_results_view"),
+    path('statistics/', StatisticsView.as_view(), name="api_for_get_all_statistics_by_admin"),
 
     path('olympics/', OlympicsView.as_view(), name="olympics_api_view"),
     path('olympics/<int:pk>/', OlympicsDetailView.as_view(), name="olympics_detail_api_view"),

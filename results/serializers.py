@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 
 
 #local imports 
-from .models import OlympicResults, Olympics, OlympicsSubjects, StudentQuestions, StudentTests, OlympicStudentTests
+from .models import MonthlyStatistics, OlympicResults, Olympics, OlympicsSubjects, StudentQuestions, StudentResults, StudentTests, OlympicStudentTests
 from tests.serializers import QuestionListSerializer, SubjectSerializer
 from users.serializers import UserListSerializer
 
@@ -83,6 +83,31 @@ class TestResultsSerializer(serializers.ModelSerializer):
             'date_modified': {'read_only':True},
             'right_answers': {'read_only':True}
         }
+#for admin
+class TestResultsAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentTests
+        fields = "__all__"
+
+
+#######  STATISTICS ################################
+class StudentResultsSerializer(serializers.ModelSerializer):
+    subject = SubjectSerializer(required=False, many=False)
+    created_by = UserListSerializer(required=False, many=False)
+    class Meta:
+        model = StudentResults
+        fields = "__all__"
+
+class StudentResultsPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentResults
+        exclude = ("created_by", "modified_by")
+
+class MonthlyStatisticsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MonthlyStatistics
+        fields = "__all__"
+
 
 #######  OLYMPICS ###################################
 
