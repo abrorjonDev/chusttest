@@ -39,20 +39,17 @@ def create_students(file, created_by=None):
     data = data.to_numpy()
     now = datetime.now()
     print("numpy read: ", datetime.now()-now)
-
+    created_users = []
+    modified_users = []
+    users = User.objects.all()
     for dt in data:
         username =dt[0] #ID
         full_name = names(dt[1]) #full_name
         school = dt[13]
         klass = dt[16]
-        # modified = 0
-        # created = 0
-        created_users = []
-        modified_users = []
-        users = User.objects.all()
-        #try to find the user
+        print(username)
         try:
-            user = User.objects.get(username=username)
+            user = users.get(username=username)
             if user.first_name != full_name[0]:
                 user.first_name = full_name[0]
             if user.last_name != full_name[1]:
@@ -67,7 +64,8 @@ def create_students(file, created_by=None):
                 user.set_password("1")
             print(user, " will modified.")
             
-            modified_users.append(user)    
+            modified_users.append(user)  
+            print("in try..")  
         #if exception, it means that the user must be created
         except:
             user = User(
@@ -81,142 +79,30 @@ def create_students(file, created_by=None):
             # if user not in modified_users and user not in created_users:
             print(user, " will created.")
             created_users.append(user)
+            print("In except..")
         
+    # bulk_create and bulk_update only create, modify objects till 1600
+    start_index = 0
+    end_index = 1600
+    print("created users length(): ", len(created_users))
+    for i in range(len(created_users)//1600):
+        User.objects.bulk_create(created_users[start_index:end_index], ignore_conflicts=True)
+        print("BUlk_create : ", start_index, end_index)
+        start_index = end_index
+        end_index = end_index + 1600
+        if end_index > len(created_users):
+            end_index = len(created_users)
+
+    print("modified users length(): ", len(modified_users))
+    for i in range(len(created_users)//1600):
+        User.objects.bulk_update(modified_users[start_index:end_index], ['first_name','last_name','father_name', 'school', 'klass'])
+        print("Bulk update:   ", start_index, end_index)
+        start_index = end_index
+        end_index = end_index + 1600
+        if end_index > len(modified_users):
+            end_index = len(modified_users)
+    return {
+        'created':len(created_users),
+        'modified': len(modified_users),
         
-        # bulk_create and bulk_update only create, modify objects till 1600
-        start_index = 0
-        end_index = 1600
-        print("created users length(): ", len(created_users))
-        for i in range(len(created_users)//1600):
-            User.objects.bulk_create(created_users[start_index:end_index])
-            print("BUlk_create : ", start_index, end_index)
-            start_index = end_index
-            end_index = end_index + 1600
-            if end_index > len(created_users):
-                end_index = len(created_users)
-
-        print("modified users length(): ", len(modified_users))
-        for i in range(len(created_users)//1600):
-            User.objects.bulk_update(modified_users[start_index:end_index])
-            print("Bulk update:   ", start_index, end_index)
-            start_index = end_index
-            end_index = end_index + 1600
-            if end_index > len(modified_users):
-                end_index = len(modified_users)
-        return {
-            'created':len(created_users),
-            'modified': len(modified_users),
-            
-            }
-    #     try:
-    #         # student = User.objects.get(username=username)
-    #         # student.first_name=full_name[0]
-    #         # student.last_name=full_name[1]
-    #         # student.father_name=full_name[2]
-    #         # student.school = school
-    #         # student.klass = klass
-    #         # student.created_by = created_by
-    #         # if not student.password:
-    #         #     student.set_password("1")
-    #         # student.save()
-    #         # created += 1
-    #         student = User.objects.create(
-    #             username=username, 
-    #             first_name=names(full_name)[0], 
-    #             last_name=names(full_name)[1],
-    #             father_name=names(full_name)[2],
-    #             school=school, 
-    #             klass=klass,
-    #             created_by=created_by
-    #             )
-    #         student.set_password("1")
-    #         student.save()
-    #         # created +=1
-
-    #     except Exception as e:
-    #         # student = User.objects.create(
-    #         #     username=username, 
-    #         #     first_name=full_name[0], 
-    #         #     last_name=full_name[1],
-    #         #     father_name=full_name[2],
-    #         #     school=school, 
-    #         #     klass=klass,
-    #         #     created_by=created_by
-    #         # )
-    #         # student.set_password("1")
-    #         # student.save()
-    #         # modified +=1
-
-
-    #         # student = User.objects.get_or_create(username=username)[0]
-    #         # student.first_name=full_name.split(" ")[1]
-    #         # student.last_name=full_name.split(" ")[0]
-    #         # student.modified_by = created_by
-    #         # student.school = school
-    #         # student.klass = klass
-    #         # if not student.password:
-    #         #     print("password saved")
-    #         #     student.set_password('1')
-    #         # student.save()
-    #         # modified += 1
-        
-    #     # start_index = 0
-    #     # end_index = 1500
-    #     # #bulk_create()   limit is 1600 so I have calculated as 1500.
-    #     # if len(created_users)//1500:
-    #     #     User.objects.bulk_create(created_users)
-    #     # else:
-    #     #     for i in range(len(created_users)//1500):
-    #     #         User.objects.bulk_create(created_users[start_index:end_index])
-    #     #         start_index = end_index
-    #     #         end_index += end_index+1500
-    #     #         if end_index > len(created_users):
-    #     #             end_index = len(created_users)
-    #     # if len(created_users)//1500:
-    #     #     User.objects.bulk_update(modified_users)
-    #     # else:
-    #     #     start_index = 0
-    #     #     end_index = 1500
-    #     #     for i in range(len(modified_users)//1500):
-    #     #         User.objects.bulk_update(modified_users[start_index:end_index])
-    #     #         start_index = end_index
-    #     #         end_index += end_index+1500
-    #     #         if end_index > len(modified_users):
-    #     #             end_index = len(modified_users)
-    # print("process finished: ", datetime.now().minute)
-
-    # return {'created':created, 'updated':modified, 'status':201}
-
-
-
-
-# from openpyxl import load_workbook, Workbook
-# from .models import User, UserDocs
-
-
-
-
-# def create_students(file, created_by=None):
-#     wb = load_workbook(file)
-#     ws = wb.active
-
-#     for i in range(2, ws.max_row+1):
-#         username = ws.cell(i, 1).value #ID
-#         full_name = ws.cell(i, 2).value #full_name
-#         # birth_date = ws.cell(i, 3).value # birth_date
-#         # genre = ws.cell(i, 4).value #genre
-#         # nationality = ws.cell(i, 5).value
-#         # citizen = ws.cell(i, 6).value
-#         # state = ws.cell(i, 7).value
-#         # region = ws.cell(i, 8).value
-#         # pinfl = ws.cell(i, 9).value
-#         # doc_type = ws.cell(i, 10).value
-#         # serial = ws.cell(i, 11).value
-#         # doc_number = ws.cell(i, 12).value
-#         # who_gave = ws.cell(i, 13).value
-#         school = ws.cell(i, 14).value
-#         # state_organ = ws.cell(i, 15).value
-#         # region_organ = ws.cell(i, 16).value
-#         klass = ws.cell(i, 17).value
-#         modified, created = 0, 0
-#         
+        }

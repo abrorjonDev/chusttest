@@ -34,11 +34,12 @@ def save_new_percentage_value_to_results_table(sender, instance, **kwargs):
 def save_new_percentage_value_to_monthly_model(sender, instance, created, **kwargs):
     curr_time = timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
     results = StudentResults.objects.filter(subject=instance.subject, date_created__month=curr_time.month, date_created__year=curr_time.year)
-    percentage = sum([res.percentage for res in results])/results.count()*100 if results.count()>0 else 0.0
+    percentage = sum([res.percentage for res in results])/results.count() if results.count()>0 else 0.0
     try:
         monthly_obj = MonthlyStatistics.objects.get(subject=instance.subject, date_created__month=curr_time.month, date_created__year=curr_time.year)        
     except:
         monthly_obj = MonthlyStatistics.objects.create(subject=instance.subject)
     monthly_obj.percentage = percentage
+    monthly_obj.month = curr_time.strftime("%B")
     monthly_obj.save()
     return instance

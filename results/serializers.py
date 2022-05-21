@@ -65,6 +65,14 @@ class TestCreateSerializer(serializers.ModelSerializer):
             'right_answers': {'read_only':True}
         }
 
+class TestListSerializer(serializers.ModelSerializer):
+    questions = PostAnswerSerializer(required=False, many=True)
+    subject = SubjectSerializer(required=False, many=False)
+    class Meta:
+        model = StudentTests
+        fields = "__all__"
+
+
 class TestResultsSerializer(serializers.ModelSerializer):
     questions = PostAnswerSerializer(required=False, many=True)
     subject = SubjectSerializer(required=False, many=False)
@@ -85,6 +93,7 @@ class TestResultsSerializer(serializers.ModelSerializer):
         }
 #for admin
 class TestResultsAdminSerializer(serializers.ModelSerializer):
+    subject = SubjectSerializer(required=False, many=False)
     class Meta:
         model = StudentTests
         fields = "__all__"
@@ -104,6 +113,7 @@ class StudentResultsPostSerializer(serializers.ModelSerializer):
         exclude = ("created_by", "modified_by")
 
 class MonthlyStatisticsSerializer(serializers.ModelSerializer):
+    subject = SubjectSerializer(many=False, required=False)
     class Meta:
         model = MonthlyStatistics
         fields = "__all__"

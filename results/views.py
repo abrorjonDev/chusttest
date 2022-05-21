@@ -1,5 +1,4 @@
 from django.shortcuts import get_object_or_404
-from requests import request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser
@@ -27,7 +26,7 @@ class TestCreateView(APIView):
     
     def get(self, request):
         queryset = self.get_queryset(user=request.user)
-        serializer = self.serializer_class(queryset, many=True)
+        serializer = self.list_serializer_class(queryset, many=True)
         return Response(serializer.data, status=200)
  
     def post(self, request):
