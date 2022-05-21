@@ -49,6 +49,34 @@ class StudentQuestions(BaseModel):
         ordering = ('id', )
 
 
+#######   STATISTICS   ###########################
+
+class StudentResults(BaseModel):
+    subject = models.ForeignKey(Subjects, on_delete=models.CASCADE)
+    percentage = models.FloatField(null=True, blank=True)
+    #student --> created_by
+    #time ----> date_created, date_modified
+
+    class Meta:
+        verbose_name = 'Student Result'
+        verbose_name_plural = 'Student Results'
+        ordering = ('-pk', )
+    def __str__(self) -> str:
+        return self.created_by.username
+
+
+
+class MonthlyStatistics(BaseModel):
+    percentage = models.FloatField(null=True, blank=True)
+    subject = models.ForeignKey(Subjects, on_delete=models.CASCADE)
+    month = models.CharField(max_length=12)#nw.strftime("%B")
+    class Meta:
+        verbose_name = 'Monthly Statistics'
+        verbose_name_plural = 'Monthly Statistics'
+        ordering = ('-pk', )
+
+    def __str__(self) -> str:
+        return self.subject.name
 ####### OLYMPICS ##################################
 
 class Olympics(BaseModel):
@@ -61,7 +89,7 @@ class Olympics(BaseModel):
     class Meta:
         verbose_name = "Olympic"
         verbose_name_plural = "Olympics"
-
+ 
     @property
     def subjects(self):
         return self.subjects.all()
