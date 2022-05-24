@@ -1,5 +1,8 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+
+from tests.models import Subjects
 
 
 #local imports 
@@ -125,7 +128,7 @@ class OlympicSubjectsSerializer(serializers.ModelSerializer):
     # subject = SubjectSerializer(required=False, many=False)
     class Meta:
         model = OlympicsSubjects
-        fields = ("id", "subject", "questions_count", "ball")
+        fields = ("id", "subject", "questions_count", "ball", "olympics")
 
         extra_kwargs = {
             'created_by':{'read_only':True},
@@ -136,7 +139,7 @@ class OlympicSubjectsListSerializer(serializers.ModelSerializer):
     subject = SubjectSerializer(required=False, many=False)
     class Meta:
         model = OlympicsSubjects
-        exclude = ("date_created", "date_modified", )
+        exclude = ("date_created", "date_modified", "olympics")
 
         extra_kwargs = {
             'created_by':{'read_only':True},
@@ -167,12 +170,12 @@ class OlympicResultsListSerializer(serializers.ModelSerializer):
             'modified_by':{'read_only':True},             
         }
 
-class OlympicPostSerializer(serializers.ModelSerializer):
-    subjects = OlympicSubjectsSerializer(required=False, many=True)
+class OlympicGetSerializer(serializers.ModelSerializer):
+    subjects = OlympicSubjectsListSerializer(required=False, many=True)
+    results = OlympicResultsListSerializer(required=False, many=True)
     class Meta:
         model = Olympics
-        fields = ("title", "image", "text", "time_start", "time_end", "subjects")
-
+        fields = "__all__"
 
 
 class OlympicSerializer(serializers.ModelSerializer):
@@ -199,6 +202,16 @@ class OlympicSerializer(serializers.ModelSerializer):
             for subject in subjects:
                 OlympicsSubjects.objects.create(**subject, olympics=olympic, created_by=self.context['request'].user)
         return olympic
+    
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.image = validated_data.get('image', instance.image) 
+        instance.text = validated_data.get('text', instance.text) 
+        instance.time_start = validated_data.get('time_start', instance.time_start)
+        instance.time_end = validated_data.get('time_end', instance.time_end) 
+        instance.save()
+        return instance
+
 
 
 class OlympicDetailSerializer(serializers.ModelSerializer):

@@ -37,7 +37,6 @@ def create_students(id, created_by=None):
     data = pd.read_excel(get_object_or_404(UserFileModel, id=id).file).to_numpy()
     users = User.objects.all()
     created_by = get_object_or_404(User, id=created_by)
-    # data = data.to_numpy()
     created_users = []
     modified_users = []
     users = User.objects.all()
@@ -58,9 +57,7 @@ def create_students(id, created_by=None):
                 user.school = school
             if user.klass != klass:
                 user.klass = klass
-            if not user.password:
-                user.set_password("1")
-            if user not in users:
+            if user not in modified_users or user not in created_users:
                 modified_users.append(user)
             print(username)
         #if exception, it means that the user must be created
@@ -83,7 +80,7 @@ def create_students(id, created_by=None):
     print("created users length(): ", len(created_users))
     for i in range(len(created_users)//1600):
         User.objects.bulk_create(created_users[start_index:end_index], ignore_conflicts=True)
-        print("BUlk_create : ", start_index, end_index)
+        print("Bulk_create : ", start_index, end_index)
         start_index = end_index
         end_index = end_index + 1600
         if end_index > len(created_users):

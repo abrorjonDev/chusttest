@@ -18,12 +18,13 @@ from .views import (
     OlympicTestCreateView,
     OlympicTestDetailView,
     OlympicStudentAnswerView,
+    OlympicSubjectsViewSet,
 )
  
  
 
 router = DefaultRouter()
-
+router.register(r'olympics/subjects', OlympicSubjectsViewSet, basename="Olympics_subjects")
 
 urlpatterns = (
     path('', include(router.urls)),
@@ -41,4 +42,5 @@ urlpatterns = (
     path('olympics/students/tests/', OlympicTestCreateView.as_view(), name="get_student_olympic_tests_api"),
     path('olympics/students/tests/<int:pk>/', OlympicTestDetailView.as_view(), name="get_student_tests_detail_api"),
     path('olympics/students/tests/questions/<int:pk>/', OlympicStudentAnswerView.as_view(), name="student_answer_post_api"),
+    path('', include(router.urls)),
 )
