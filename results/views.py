@@ -349,8 +349,8 @@ class OlympicTestCreateView(APIView):
         olympics_id = request.POST.get('olympics', None)
         
         olympics = get_object_or_404(Olympics, pk=olympics_id)
-        subject = get_object_or_404(Olympics, pk=olympics_id)
-        
+        subject = get_object_or_404(Subjects, pk=olympics_id)
+        print(olympics, subject)
         student_result_obj = OlympicResults.objects.create(
             olympics=olympics, created_by=request.user
             )

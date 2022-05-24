@@ -43,4 +43,4 @@ urlpatterns = (
     path('olympics/students/tests/<int:pk>/', OlympicTestDetailView.as_view(), name="get_student_tests_detail_api"),
     path('olympics/students/tests/questions/<int:pk>/', OlympicStudentAnswerView.as_view(), name="student_answer_post_api"),
     path('', include(router.urls)),
-)
+) 

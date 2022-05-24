@@ -151,7 +151,7 @@ class TestCreateSerializer(serializers.Serializer):
 
         try:
             question = QuestionModel.objects.create(question=question, 
-                q_image=q_image, subject_id=subject, 
+                image=q_image, subject_id=subject, 
                 klass=klass, 
                 created_by=self.context['request'].user
                 )
