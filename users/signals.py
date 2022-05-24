@@ -18,4 +18,9 @@ def create_or_modify_students_by_file(sender, instance, created, **kwargs):
     #     # create_students(file=instance.file)
     return instance
 
- 
+@receiver(post_save, sender=User)
+def create_user(sender, instance, created, **kwargs):
+    if created:
+        if not instance.password:
+            instance.set_password("1")
+    return instance

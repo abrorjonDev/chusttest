@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAdminUser
 import random
 import datetime
@@ -217,7 +218,17 @@ class StatisticsView(APIView):
         return Response(data, status=200)
 
 ###########    OLYMPICS   ##################################################
- 
+
+
+class OlympicSubjectsViewSet(ModelViewSet):
+    queryset = OlympicsSubjects.objects.all()
+    def get_serializer_class(self):
+        if self.action == "list" or self.action == "retrieve":
+            return OlympicSubjectsListSerializer
+        return OlympicSubjectsSerializer
+    permission_classes = (IsAdminUser, )
+
+
 class OlympicsView(APIView):
     """
     This API is only for admin.
@@ -229,8 +240,11 @@ class OlympicsView(APIView):
     permission_classes = (IsAdminUser, )
     
     def get_serializer_class(self):
+        if self.request.method == "GET":
+            return OlympicGetSerializer
         return OlympicSerializer
-
+        
+    
     def get(self, request):
         serializer = self.get_serializer_class()(self.get_queryset(), many=True)
         return Response(serializer.data, status=200)
@@ -254,6 +268,8 @@ class OlympicsDetailView(APIView):
     permission_classes = (IsAdminUser, )
     
     def get_serializer_class(self):
+        if self.request.method == "GET":
+            return OlympicGetSerializer
         return OlympicSerializer
 
     def get(self, request, pk):
@@ -263,14 +279,14 @@ class OlympicsDetailView(APIView):
 
     def patch(self, request, pk):
         olympic = get_object_or_404(Olympics, pk=pk)
-        serializer = self.get_serializer_class()(olympic, data=request.data, partial=True)
+        serializer = self.get_serializer_class()(olympic, data=request.data, partial=True, context={"request":request})
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         return Response(serializer.data, status=201)
 
     def put(self, request, pk):
         olympic = get_object_or_404(Olympics, pk=pk)
-        serializer = self.get_serializer_class()(olympic, data=request.data)
+        serializer = self.get_serializer_class()(olympic, data=request.data, context={"request":request})
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         return Response(serializer.data, status=201)
