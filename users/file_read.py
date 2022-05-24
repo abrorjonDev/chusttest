@@ -1,10 +1,18 @@
 from datetime import datetime
+from django.shortcuts import get_object_or_404
 import pandas as pd
 import numpy as np
 from django.contrib.auth import get_user_model
 
-User = get_user_model()
+from celery import shared_task
 
+from users.models import UserFileModel
+
+User = get_user_model()
+@shared_task
+def summa(a, b):
+
+    return a + b
 
 def names(full_name):
     first_name = None
@@ -14,7 +22,7 @@ def names(full_name):
     if len(name)>3:
         first_name = name[1]
         last_name = name[0]
-        father_name = name[2]+ ' '+ name[3]
+        father_name = name[2]+ ' '+ name[3] 
     elif len(name)==3:
         first_name = name[1]
         last_name = name[0]
@@ -24,21 +32,12 @@ def names(full_name):
         last_name = name[0]
     return first_name, last_name, father_name
 
-def create_students(file, created_by=None):
-    now = datetime.now()
-    print("file got: ", now )
-    print(file)
-
-    data = pd.read_excel(file)
-    print("file read: ", datetime.now()-now)
-    now = datetime.now()
-
+@shared_task
+def create_students(id, created_by=None):
+    data = pd.read_excel(get_object_or_404(UserFileModel, id=id).file).to_numpy()
     users = User.objects.all()
-    print("users cached got: ", datetime.now()-now, users.count())
-
-    data = data.to_numpy()
-    now = datetime.now()
-    print("numpy read: ", datetime.now()-now)
+    created_by = get_object_or_404(User, id=created_by)
+    # data = data.to_numpy()
     created_users = []
     modified_users = []
     users = User.objects.all()
@@ -47,7 +46,6 @@ def create_students(file, created_by=None):
         full_name = names(dt[1]) #full_name
         school = dt[13]
         klass = dt[16]
-        print(username)
         try:
             user = users.get(username=username)
             if user.first_name != full_name[0]:
@@ -62,10 +60,9 @@ def create_students(file, created_by=None):
                 user.klass = klass
             if not user.password:
                 user.set_password("1")
-            print(user, " will modified.")
-            
-            modified_users.append(user)  
-            print("in try..")  
+            if user not in users:
+                modified_users.append(user)
+            print(username)
         #if exception, it means that the user must be created
         except:
             user = User(
@@ -76,10 +73,9 @@ def create_students(file, created_by=None):
                 school=school,
                 klass=klass
                 )
+            print(username)
             # if user not in modified_users and user not in created_users:
-            print(user, " will created.")
             created_users.append(user)
-            print("In except..")
         
     # bulk_create and bulk_update only create, modify objects till 1600
     start_index = 0
@@ -103,6 +99,5 @@ def create_students(file, created_by=None):
             end_index = len(modified_users)
     return {
         'created':len(created_users),
-        'modified': len(modified_users),
-        
+        'modified': len(modified_users)
         }
