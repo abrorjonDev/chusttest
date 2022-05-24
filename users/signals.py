@@ -13,9 +13,9 @@ User = get_user_model()
 @receiver(post_save, sender=UserFileModel)
 def create_or_modify_students_by_file(sender, instance, created, **kwargs):
     print("post save signals in user")
-    if created:
-        student_register_by_file.delay(instance.file, instance.created_by)
-        # create_students(file=instance.file)
+    # if created:
+    #     student_register_by_file.delay(instance.file, instance.created_by)
+    #     # create_students(file=instance.file)
     return instance
 
  

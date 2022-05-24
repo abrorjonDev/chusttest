@@ -204,7 +204,7 @@ IMPORT_EXPORT_USE_TRANSACTIONS = True
 #CELERY
 CELERY_ACCEPT_CONTENT = ['multipart/form-data', 'application/json', 'application/x-www-form-urlencoded']
 CELERY_BROKER_URL = 'amqp://localhost'
-CELERY_TASK_SERIALIZER = 'yaml'  #'json', 'pickle', 'msgpack'(Experimental)
+CELERY_TASK_SERIALIZER = 'json'  #'json', 'pickle', 'msgpack'(Experimental)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field

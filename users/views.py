@@ -5,9 +5,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from django.db.models import Q
+
+from users.models import UserFileModel
 #local imports
 from .serializers import LoginSerializer, UserDataSerializer, UserListSerializer
-from .file_read import create_students
+from .file_read import create_students, summa
 
 User = get_user_model()
 
@@ -110,6 +112,7 @@ class StudentDetailView(APIView):
             return Response({'status':'deleted succesfully.'}, status=200)
         except:
             return Response({'status':'Not found.'}, status=404)
+import pandas as pd
 
 class FileUpload(APIView):
     """
@@ -122,6 +125,10 @@ class FileUpload(APIView):
     permission_classes = (IsAdminUser, )
 
     def post(self, request):
-        file = request.data['file']
-        student_status = create_students(file=file, created_by=request.user)
-        return Response(student_status, status=200)
+        file = request.data['file1']
+        # data = pd.read_excel(file)
+        file_object = UserFileModel.objects.create(file=file, created_by=request.user)
+        # summa.delay(12, 20)
+        print(file_object.id)
+        create_students.delay(id=file_object.id, created_by=request.user.id)
+        return Response({"status": "students creating process from file is going"}, status=200)
