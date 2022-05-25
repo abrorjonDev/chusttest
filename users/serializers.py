@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from django.contrib.auth import get_user_model
 
+from users.file_read import names
 from users.models import UserDocs
 User = get_user_model()
 
@@ -15,8 +16,8 @@ class LoginSerializer(serializers.ModelSerializer):
 class UserDocsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserDocs
-        # fields = "__all__"
         exclude = ('user', )
+
 
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,8 +27,17 @@ class UserListSerializer(serializers.ModelSerializer):
 class UserDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        # fields = "__all__"
         exclude = ('groups', 'user_permissions')
+
+        extra_kwargs = {
+            'password':{'required':False}
+        }
+    def create(self, attrs):
+        user = User(**attrs)
+        user.set_password(attrs.get('password', '1'))
+        user.save()
+        return user
+
 
     def update(self, instance, attrs):
         keys = attrs.keys()

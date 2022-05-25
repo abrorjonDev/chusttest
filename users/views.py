@@ -56,6 +56,7 @@ class StudentsListView(APIView):
         return User.objects.exclude(Q(is_superuser=True)|Q(is_staff=True))
 
     serializer_class = UserListSerializer
+    post_serializer_class = UserDataSerializer
     permission_classes = (IsAdminUser, )
 
     def get(self, request):
@@ -66,7 +67,7 @@ class StudentsListView(APIView):
         return Response(serializer.data, status=200)
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.post_serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save(created_by=request.user)
             return Response(serializer.data, status=201)
