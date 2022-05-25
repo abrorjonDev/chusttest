@@ -344,16 +344,23 @@ class OlympicTestCreateView(APIView):
     serializer_class = OlympicResultsSerializer
 
     def post(self, request):
-        subject_id = request.POST.get('subject', None)
-        klass = request.POST.get('klass', None)
-        olympics_id = request.POST.get('olympics', None)
+
+        subject_id = request.data.get('subject', None)
+        klass = request.data.get('klass', None)
+        olympics_id = request.data.get('olympics', None)
         
         olympics = get_object_or_404(Olympics, pk=olympics_id)
-        subject = get_object_or_404(Subjects, pk=olympics_id)
-        print(olympics, subject)
-        student_result_obj = OlympicResults.objects.create(
-            olympics=olympics, created_by=request.user
-            )
+        subject = get_object_or_404(Subjects, pk=subject_id)
+
+        #if the current student has been started the test in the last an hour.
+        now = timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
+        olympic_results = OlympicResults.objects.filter(olympics=olympics, created_by=request.user, finished=False, date_created__gte=now-datetime.timedelta(hours=1))
+        if olympic_results.count()>0:
+            student_result_obj = olympic_results.first()
+        else:
+            student_result_obj = OlympicResults.objects.create(
+                olympics=olympics, created_by=request.user
+                )
         questions = QuestionModel.objects.filter(klass=klass, subject=subject)
         
         # if not enough tests for the subject?
@@ -381,8 +388,16 @@ class OlympicTestCreateView(APIView):
 
         #tests have been created.
         #return student tests
-        serializer = self.serializer_class(student_result_obj, many=False)        
-        return Response(serializer.data, status=201) 
+        
+        serializer = self.serializer_class(student_result_obj, many=False).data       
+        now=timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
+        time_delta = now.minute-student_result_obj.date_created.minute
+        if time_delta < 0:
+            time_delta = 60 + time_delta 
+        # serializer.update({'time_limit':60, 'remained_time':60-time_delta})
+        serialized_data = serializer
+        serialized_data.update({'time_limit':60, 'remained_time':60-time_delta})
+        return Response(serialized_data, status=201) 
 
 
 class OlympicTestDetailView(APIView):
