@@ -97,6 +97,9 @@ class TestResultsSerializer(serializers.ModelSerializer):
 #for admin
 class TestResultsAdminSerializer(serializers.ModelSerializer):
     subject = SubjectSerializer(required=False, many=False)
+    created_by = UserListSerializer(required=False, many=False)
+    modified_by = UserListSerializer(required=False, many=False)
+
     class Meta:
         model = StudentTests
         fields = "__all__"

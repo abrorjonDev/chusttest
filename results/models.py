@@ -6,11 +6,6 @@ User = get_user_model()
 #local imports
 from tests.models import QuestionModel, AnswerModel, Subjects
 
- 
-
-# class StatisticsModel(BaseModel):
-#     student = models.ForeignKey(User)
-
 
 class StudentTests(BaseModel):
     CLASSES = (
@@ -33,6 +28,11 @@ class StudentTests(BaseModel):
     @property
     def questions(self):
         return self.questions.all()
+
+    class Meta:
+        verbose_name = "Student Test"
+        verbose_name_plural = "Student Tests"
+        ordering = ("-id", )
 
     def __str__(self):
         return self.created_by.username

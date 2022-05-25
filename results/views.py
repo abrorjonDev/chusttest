@@ -197,13 +197,14 @@ class StatisticsView(APIView):
     """
     This API is used for getting Percentages about pupils results in months.
     Only admin can see this api.
+    This api give infos about the current month statistics within all subjects.
+    If you want to get only about any subject lonely, send 'subject' value in parameters list.
     """
     def get_queryset(self, subject=None):
         curr_time=timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
         if subject:
             return MonthlyStatistics.objects.filter(subject_id=subject)
         return MonthlyStatistics.objects.filter(date_created__month=curr_time.month, date_created__year=curr_time.year)
-    
     serializer_class = MonthlyStatisticsSerializer
     permission_classes = (IsAdminUser, )
 
