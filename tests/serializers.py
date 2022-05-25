@@ -108,8 +108,6 @@ class TestAdminListSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        # if 'qanswers' not in validated_data.keys():
-        #     raise ValidationErr('Answers has not been sent.')
         qanswers = validated_data.pop("qanswers")
         question = QuestionModel.objects.create(**validated_data, created_by=self.context['request'].user)
         for answer in qanswers:
@@ -118,6 +116,7 @@ class TestAdminListSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.question = validated_data.get('question', instance.question)
+        instance.image = validated_data.get('image', instance.image)
         instance.subject = validated_data.get('subject', instance.subject)
         instance.klass = validated_data.get('klass', instance.klass)
         instance.modified_by = self.context['request'].user
