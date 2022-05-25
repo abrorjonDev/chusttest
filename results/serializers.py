@@ -147,10 +147,21 @@ class OlympicSubjectsListSerializer(serializers.ModelSerializer):
         }
 
 
+class OlympicStudentTestsSerializer(serializers.ModelSerializer):
+    question = QuestionListSerializer(required=False, many=False)
+    class Meta:
+        model = OlympicStudentTests
+        exclude = ("result", )
+
+        extra_kwargs = {
+            'created_by':{'read_only':True},
+            'modified_by':{'read_only':True}, 
+            'result': {'read_only':True}
+            }
 
 class OlympicResultsSerializer(serializers.ModelSerializer):
     created_by = UserListSerializer(required=False, many=False)
-    questions = QuestionListSerializer(required=False, many=True)
+    questions = OlympicStudentTestsSerializer(required=False, many=True)
     class Meta:
         model = OlympicResults
         fields = "__all__"
@@ -161,9 +172,11 @@ class OlympicResultsSerializer(serializers.ModelSerializer):
         }
 
 class OlympicResultsListSerializer(serializers.ModelSerializer):
+    created_by = UserListSerializer(required=False, many=False)
+    modified_by = UserListSerializer(required=False, many=False)
     class Meta:
         model = OlympicResults
-        exclude = ("questions", "date_created", "date_modified")
+        exclude = ("date_created", "date_modified")
 
         extra_kwargs = {
             'created_by':{'read_only':True},
@@ -173,6 +186,9 @@ class OlympicResultsListSerializer(serializers.ModelSerializer):
 class OlympicGetSerializer(serializers.ModelSerializer):
     subjects = OlympicSubjectsListSerializer(required=False, many=True)
     results = OlympicResultsListSerializer(required=False, many=True)
+    created_by = UserListSerializer(required=False, many=False)
+    modified_by = UserListSerializer(required=False, many=False)
+
     class Meta:
         model = Olympics
         fields = "__all__"
@@ -182,6 +198,8 @@ class OlympicSerializer(serializers.ModelSerializer):
     subjects = OlympicSubjectsSerializer(required=False, many=True)
     results = OlympicResultsListSerializer(required=False, many=True)
     created_by = UserListSerializer(required=False, many=False)
+    modified_by = UserListSerializer(required=False, many=False)
+
     class Meta:
         model = Olympics
         fields = "__all__"
@@ -208,7 +226,8 @@ class OlympicSerializer(serializers.ModelSerializer):
         instance.image = validated_data.get('image', instance.image) 
         instance.text = validated_data.get('text', instance.text) 
         instance.time_start = validated_data.get('time_start', instance.time_start)
-        instance.time_end = validated_data.get('time_end', instance.time_end) 
+        instance.time_end = validated_data.get('time_end', instance.time_end)
+        instance.modified_by = self.context["request"].user
         instance.save()
         return instance
 
@@ -237,14 +256,3 @@ class OlympicDetailSerializer(serializers.ModelSerializer):
         return instance
 
 
-
-class OlympicStudentTestsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OlympicStudentTests
-        fields = "__all__"
-
-        extra_kwargs = {
-            'created_by':{'read_only':True},
-            'modified_by':{'read_only':True}, 
-            'result': {'read_only':True}
-            }
