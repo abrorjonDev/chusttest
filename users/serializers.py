@@ -22,7 +22,7 @@ class UserDocsSerializer(serializers.ModelSerializer):
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("pk", "username", "full_name", "school", "klass")
+        fields = ("pk", "username", "first_name", "last_name", "father_name", "school", "klass")
 
 class UserDataSerializer(serializers.ModelSerializer):
     class Meta:
