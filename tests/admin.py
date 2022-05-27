@@ -20,6 +20,7 @@ class QuestionAdmin(admin.ModelAdmin):
     list_display = ('question', 'id', 'image', 'date_created', 'date_modified')
     search_fields = ('question', 'created_by__username', 'modified_by__username')
     readonly_fields = ('date_created', 'date_modified', 'created_by', 'modified_by')
+    list_filter = ("subject", )
     fieldsets = (
         (None, {
             'fields':('question', 'image', 'subject')

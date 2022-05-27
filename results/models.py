@@ -83,8 +83,9 @@ class Olympics(BaseModel):
     title = models.CharField(max_length=1000)
     image = models.ImageField(upload_to="olympics", null=True, blank=True)
     text = models.TextField()
-    time_start = models.DateTimeField()
-    time_end = models.DateTimeField()
+    time_start = models.DateTimeField(null=True, blank=True)
+    time_end = models.DateTimeField(null=True, blank=True)
+    time_limit = models.FloatField(help_text="limit time in hours", null=True, blank=True)
 
     class Meta:
         verbose_name = "Olympic"
@@ -125,7 +126,7 @@ class OlympicResults(BaseModel):
         verbose_name_plural = "Olympic Results"
 
     def __str__(self) -> str:
-        return self.student.full_name
+        return self.created_by.full_name
 
     @property
     def questions(self):
@@ -144,5 +145,5 @@ class OlympicStudentTests(BaseModel):
         verbose_name = "Olympic Tests"
 
     def __str__(self) -> str:
-        return self.result.student.full_name
+        return self.result.created_by.full_name
 

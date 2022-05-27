@@ -164,7 +164,7 @@ class OlympicStudentTestsSerializer(serializers.ModelSerializer):
 
 class OlympicResultsSerializer(serializers.ModelSerializer):
     created_by = UserListSerializer(required=False, many=False)
-    questions = OlympicStudentTestsSerializer(required=False, many=True)
+    # questions = OlympicStudentTestsSerializer(required=False, many=True)
     class Meta:
         model = OlympicResults
         fields = "__all__"
@@ -173,6 +173,10 @@ class OlympicResultsSerializer(serializers.ModelSerializer):
             'created_by':{'read_only':True},
             'modified_by':{'read_only':True},             
         }
+
+    def update(self, instance, attrs):
+        instance.modified_by = self.context["request"].user
+        instance.save()
 
 class OlympicResultsListSerializer(serializers.ModelSerializer):
     created_by = UserListSerializer(required=False, many=False)

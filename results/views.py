@@ -346,60 +346,70 @@ class OlympicTestCreateView(APIView):
 
     def post(self, request):
 
-        subject_id = request.data.get('subject', None)
-        klass = request.data.get('klass', None)
-        olympics_id = request.data.get('olympics', None)
-        
-        olympics = get_object_or_404(Olympics, pk=olympics_id)
-        subject = get_object_or_404(Subjects, pk=subject_id)
+        #get the olympics in request.data
+        olympics_id = request.data.get("olympics", None)
 
-        #if the current student has been started the test in the last an hour.
+        #get Olympics object
+        olympics = get_object_or_404(Olympics, pk=olympics_id)
+
+        #if olympics object is None
+        if not olympics:
+            return Response({"detail":"Not found"}, status=400)
+
+
+        #if the current student has been started the olympics
         now = timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
-        olympic_results = OlympicResults.objects.filter(olympics=olympics, created_by=request.user, finished=False, date_created__gte=now-datetime.timedelta(hours=1))
+        olympic_results = OlympicResults.objects.filter(olympics=olympics, created_by=request.user)
         if olympic_results.count()>0:
             student_result_obj = olympic_results.first()
         else:
-            student_result_obj = OlympicResults.objects.create(
-                olympics=olympics, created_by=request.user
-                )
-        questions = QuestionModel.objects.filter(klass=klass, subject=subject)
-        
-        # if not enough tests for the subject?
-        questions_count = olympics.subjects.get(subject_id=subject_id).questions_count
-        if questions.count() < questions_count:
-            return Response({
-                'detail':' Sorry! Test questions are not enough.'
-                }, status=200)
-        
-        #else tests are enough, good luck
-        student_tests = []
-        random_questions = []
-        while len(random_questions) < questions_count:
-            question=random.choice(questions)
-            while question in random_questions:
-                question=random.choice(questions)
-            random_questions.append(question)
-            student_olympic_question = OlympicStudentTests(
-                result=student_result_obj,
-                question=question,
-                created_by=request.user
-            )
-            student_tests.append(student_olympic_question)
-        OlympicStudentTests.objects.bulk_create(student_tests)
+            student_result_obj = OlympicResults.objects.create(olympics=olympics, created_by=request.user)
 
-        #tests have been created.
-        #return student tests
-        
-        serializer = self.serializer_class(student_result_obj, many=False).data       
-        now=timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
-        time_delta = now.minute-student_result_obj.date_created.minute
-        if time_delta < 0:
-            time_delta = 60 + time_delta 
-        # serializer.update({'time_limit':60, 'remained_time':60-time_delta})
-        serialized_data = serializer
-        serialized_data.update({'time_limit':60, 'remained_time':60-time_delta})
-        return Response(serialized_data, status=201) 
+        #get serialized data about student results.
+        time_delta = now-student_result_obj.date_created
+        data = self.serializer_class(student_result_obj, many=False).data
+        data["time_remained"] = olympics.time_limit - time_delta.seconds//60
+        data["questions"] = []
 
+        #if There are questions already, Get them
+        questions = OlympicStudentTests.objects.filter(result=student_result_obj)
+        if questions.count():
+            olympic_subjects = olympics.subjects.all()
+            for olympic_subject in olympic_subjects:
+                data["questions"].append({
+                    "subject": OlympicSubjectsListSerializer(olympic_subject).data,
+                    "questions": OlympicStudentTestsSerializer(questions.all(), many=True).data
+                })
+
+        # else create tests for the current student
+        else:
+            olympic_subjects = olympics.subjects.all()
+            for olympic_subject in olympic_subjects:
+                questions = QuestionModel.objects.filter(subject=olympic_subject.subject)
+                #if tests are enough, good luck
+                if questions.count() > olympic_subject.questions_count: # Olympic subject tests count.
+                    student_tests = []
+                    random_questions = []
+                    while len(random_questions) < olympic_subject.questions_count:
+                        question=random.choice(questions)
+                        while question in random_questions:
+                            question=random.choice(questions)
+                        random_questions.append(question)
+                        student_olympic_question = OlympicStudentTests(
+                            result=student_result_obj,
+                            question=question,
+                            created_by=request.user
+                        )
+                        student_tests.append(student_olympic_question)
+                    questions = OlympicStudentTests.objects.bulk_create(student_tests)
+
+                    #serialize tests
+                    data["questions"].append({
+                        "subject": OlympicSubjectsListSerializer(olympic_subject).data,
+                        "questions": OlympicStudentTestsSerializer(questions, many=True).data
+                    })
+
+        return Response(data, status=200)
 
 class OlympicTestDetailView(APIView):
     
@@ -422,7 +432,7 @@ class OlympicTestDetailView(APIView):
 
     def patch(self, request, pk):
         olympic_result_obj = get_object_or_404(OlympicResults, pk=pk)
-        serializer = self.serializer_class(olympic_result_obj, data=request.data, partial=True)
+        serializer = self.serializer_class(olympic_result_obj, data=request.data, partial=True, context={"request":request})
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=200)
