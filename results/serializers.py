@@ -177,6 +177,7 @@ class OlympicResultsSerializer(serializers.ModelSerializer):
     def update(self, instance, attrs):
         instance.modified_by = self.context["request"].user
         instance.save()
+        return instance
 
 class OlympicResultsListSerializer(serializers.ModelSerializer):
     created_by = UserListSerializer(required=False, many=False)

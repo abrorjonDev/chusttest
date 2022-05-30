@@ -367,8 +367,9 @@ class OlympicTestCreateView(APIView):
 
         #get serialized data about student results.
         time_delta = now-student_result_obj.date_created
+        time_remained = olympics.time_limit*60 - time_delta.seconds//60
         data = self.serializer_class(student_result_obj, many=False).data
-        data["time_remained"] = olympics.time_limit - time_delta.seconds//60
+        data["time_remained"] = time_remained if time_remained > 0 else 0 
         data["questions"] = []
 
         #if There are questions already, Get them
@@ -378,7 +379,7 @@ class OlympicTestCreateView(APIView):
             for olympic_subject in olympic_subjects:
                 data["questions"].append({
                     "subject": OlympicSubjectsListSerializer(olympic_subject).data,
-                    "questions": OlympicStudentTestsSerializer(questions.all(), many=True).data
+                    "questions": OlympicStudentTestsSerializer(questions.filter(question__subject=olympic_subject.subject), many=True).data
                 })
 
         # else create tests for the current student
