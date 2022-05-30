@@ -11,7 +11,6 @@ from .views import (
     StudentResultsView,
     StatisticsView,
 
-
     OlympicsView,
     OlympicsDetailView,
     OlympicResultsView,

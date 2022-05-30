@@ -62,7 +62,7 @@ class StudentResults(BaseModel):
         verbose_name_plural = 'Student Results'
         ordering = ('-pk', )
     def __str__(self) -> str:
-        return self.created_by.username
+        return self.subject.name
 
 
 
@@ -77,6 +77,7 @@ class MonthlyStatistics(BaseModel):
 
     def __str__(self) -> str:
         return self.subject.name
+        
 ####### OLYMPICS ##################################
 
 class Olympics(BaseModel):
