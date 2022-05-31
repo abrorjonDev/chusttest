@@ -57,9 +57,9 @@ def create_students(id, created_by=None):
                 user.school = school
             if user.klass != klass:
                 user.klass = klass
+            user.ser_password("1")
             if user not in modified_users or user not in created_users:
                 modified_users.append(user)
-            print(username)
         #if exception, it means that the user must be created
         except:
             user = User(
@@ -70,7 +70,7 @@ def create_students(id, created_by=None):
                 school=school,
                 klass=klass
                 )
-            print(username)
+            user.set_password("1")
             # if user not in modified_users and user not in created_users:
             created_users.append(user)
         

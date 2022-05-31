@@ -177,12 +177,13 @@ class OlympicResultsSerializer(serializers.ModelSerializer):
     def update(self, instance, attrs):
         instance.modified_by = self.context["request"].user
         instance.finished = attrs.get("finished", instance.finished)
-        if attrs["finished"] or instance.finished:
+        if attrs["finished"]:
             subjects = instance.olympics.subjects.all()
             ball = 0.0
             for subject in subjects:
-                ball += instance.questions.filter(question__subject=subject.subject, student_answer__is_right=True, created_by=instance.created_by).count()*subject.ball
-            instance.ball = ball
+                answers = instance.questions.filter(question__subject=subject.subject, student_answer__is_right=True, created_by=instance.created_by)
+                ball += answers.count()*subject.ball
+            instance.ball = round(ball, 2)
         instance.save()
         return instance
 
@@ -200,7 +201,7 @@ class OlympicResultsListSerializer(serializers.ModelSerializer):
 
 class OlympicGetSerializer(serializers.ModelSerializer):
     subjects = OlympicSubjectsListSerializer(required=False, many=True)
-    results = OlympicResultsListSerializer(required=False, many=True)
+    # results = OlympicResultsListSerializer(required=False, many=True)
     created_by = UserListSerializer(required=False, many=False)
     modified_by = UserListSerializer(required=False, many=False)
 
@@ -211,7 +212,7 @@ class OlympicGetSerializer(serializers.ModelSerializer):
 
 class OlympicSerializer(serializers.ModelSerializer):
     subjects = OlympicSubjectsSerializer(required=False, many=True)
-    results = OlympicResultsListSerializer(required=False, many=True)
+    # results = OlympicResultsListSerializer(required=False, many=True)
     created_by = UserListSerializer(required=False, many=False)
     modified_by = UserListSerializer(required=False, many=False)
 
@@ -222,7 +223,7 @@ class OlympicSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'created_by':{'read_only':True},
             'modified_by':{'read_only':True},             
-            'results':{'read_only':True},             
+            # 'results':{'read_only':True},             
 
         }
 
@@ -242,6 +243,7 @@ class OlympicSerializer(serializers.ModelSerializer):
         instance.text = validated_data.get('text', instance.text) 
         instance.time_start = validated_data.get('time_start', instance.time_start)
         instance.time_end = validated_data.get('time_end', instance.time_end)
+        instance.avg_result = validated_data.get("avg_result", instance.avg_result)
         instance.modified_by = self.context["request"].user
         instance.save()
         return instance

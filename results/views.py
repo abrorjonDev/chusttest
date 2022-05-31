@@ -247,7 +247,13 @@ class OlympicsView(APIView):
         
     
     def get(self, request):
-        serializer = self.get_serializer_class()(self.get_queryset(), many=True)
+        queryset = self.get_queryset()
+        for olympics in queryset.all():
+            if not olympics.avg_result:
+                avg_ball = sum([result.ball for result in olympics.results.all() if result.ball])/olympics.results.all().count()
+                olympics.avg_result = round(avg_ball, 2)
+                olympics.save()
+        serializer = self.get_serializer_class()(queryset, many=True)
         return Response(serializer.data, status=200)
 
     def post(self, request):
@@ -275,6 +281,7 @@ class OlympicsDetailView(APIView):
 
     def get(self, request, pk):
         olympic = get_object_or_404(Olympics, pk=pk)
+
         serializer = self.get_serializer_class()(olympic, many=False)
         return Response(serializer.data, status=200)
 
@@ -356,20 +363,26 @@ class OlympicTestCreateView(APIView):
         if not olympics:
             return Response({"detail":"Not found"}, status=400)
 
-
         #if the current student has been started the olympics
-        now = timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
         olympic_results = OlympicResults.objects.filter(olympics=olympics, created_by=request.user)
         if olympic_results.count()>0:
             student_result_obj = olympic_results.first()
-        else:
+            if olympics.time_end < timezone.now():
+                student_result_obj.finished = True
+                student_result_obj.save()
+                serializer = OlympicResultsSerializer(student_result_obj, data={"finished":True}, partial=True,  context={"request":request})
+                return Response(serializer.data, status=200)
+        elif olympics.time_start <= timezone.now() and olympics.time_end > timezone.now():
             student_result_obj = OlympicResults.objects.create(olympics=olympics, created_by=request.user)
 
+        #if olympic is not open for the time duration which admin entered.
+        if not (olympics.time_start <= timezone.now() and olympics.time_end > timezone.now()):
+            return Response({"detail":"Olimpics object is not open now or it has been closed."}, status=403)
         #get serialized data about student results.
-        time_delta = now-student_result_obj.date_created
+        time_delta = timezone.now()-student_result_obj.date_created
         time_remained = olympics.time_limit*60 - time_delta.seconds//60
         data = self.serializer_class(student_result_obj, many=False).data
-        data["time_remained"] = time_remained if time_remained > 0 else 0 
+        data["time_remained"] = time_remained if time_remained > 0 else 0
         data["questions"] = []
 
         #if There are questions already, Get them
@@ -433,10 +446,16 @@ class OlympicTestDetailView(APIView):
 
     def patch(self, request, pk):
         olympic_result_obj = get_object_or_404(OlympicResults, pk=pk)
+        if olympic_result_obj.finished == True:
+            return Response({"detail": "Test already finished"}, status=403)
         serializer = self.serializer_class(olympic_result_obj, data=request.data, partial=True, context={"request":request})
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response(serializer.data, status=200)
+            data = serializer.data
+            max_ball = sum([obj.ball*obj.questions_count for obj in olympic_result_obj.olympics.subjects.all() ])
+            data["max_ball"] = max_ball
+            print("Maximum ball: ", max_ball)
+            return Response(data, status=200)
         return Response(serializer.errors, status=400)
 
     def delete(self, request, pk):
@@ -467,6 +486,8 @@ class OlympicStudentAnswerView(APIView):
 
     def patch(self, request, pk):
         object = self.get_object(pk=pk)
+        if object and object.result.finished:
+            return Response({"detail":"Test already finished."}, status=403)
         serializer = self.serializer_class(object,data=request.data,partial=True)
         if serializer.is_valid(raise_exception=True):
             serializer.save()

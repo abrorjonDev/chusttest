@@ -87,7 +87,7 @@ class Olympics(BaseModel):
     time_start = models.DateTimeField(null=True, blank=True)
     time_end = models.DateTimeField(null=True, blank=True)
     time_limit = models.FloatField(help_text="limit time in hours", null=True, blank=True)
-
+    avg_result = models.FloatField(help_text="average ball of students", null=True, blank=True)
     class Meta:
         verbose_name = "Olympic"
         verbose_name_plural = "Olympics"
@@ -95,7 +95,7 @@ class Olympics(BaseModel):
     @property
     def subjects(self):
         return self.subjects.all()
-
+ 
     @property
     def results(self):
         return self.results.all()
@@ -116,7 +116,7 @@ class OlympicsSubjects(BaseModel):
     def __str__(self):
         return self.subject.name
 
-
+ 
 class OlympicResults(BaseModel):
     olympics = models.ForeignKey(Olympics, on_delete=models.SET_NULL, null=True, blank=True, related_name="results")
     ball = models.FloatField(null=True, blank=True)
