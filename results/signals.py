@@ -42,17 +42,3 @@ def save_new_percentage_value_to_monthly_model(sender, instance, created, **kwar
     monthly_obj.month = curr_time.strftime("%B")
     monthly_obj.save()
     return instance
-
-
-
-# @receiver(post_save, sender=OlympicResults)
-# def save_student_olympic_result_ball(sender, instance, created, **kwargs):
-#     if instance.finished:
-#         subjects = instance.olympics.subjects.all()
-#         ball = 0.0
-#         for subject in subjects:
-#             ball += instance.questions.filter(question__subject=subject.subject, student_answer__is_right=True, created_by=instance.created_by).count()*subject.ball
-#         instance.ball = ball
-#         instance.save()
-#     return instance
-
