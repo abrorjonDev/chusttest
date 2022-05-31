@@ -176,6 +176,7 @@ class OlympicResultsSerializer(serializers.ModelSerializer):
 
     def update(self, instance, attrs):
         instance.modified_by = self.context["request"].user
+        instance.finished = attrs.get("finished", instance.finished)
         instance.save()
         return instance
 
