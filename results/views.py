@@ -250,7 +250,8 @@ class OlympicsView(APIView):
         queryset = self.get_queryset()
         for olympics in queryset.all():
             if not olympics.avg_result:
-                avg_ball = sum([result.ball for result in olympics.results.all() if result.ball])/olympics.results.all().count()
+                count = olympics.results.all().count()
+                avg_ball = sum([result.ball for result in olympics.results.all() if result.ball])/count if count >0 else 0.0
                 olympics.avg_result = round(avg_ball, 2)
                 olympics.save()
         serializer = self.get_serializer_class()(queryset, many=True)
