@@ -243,6 +243,7 @@ class OlympicSerializer(serializers.ModelSerializer):
         instance.text = validated_data.get('text', instance.text) 
         instance.time_start = validated_data.get('time_start', instance.time_start)
         instance.time_end = validated_data.get('time_end', instance.time_end)
+        instance.time_limit = validated_data.get('time_limit', instance.time_limit)
         instance.avg_result = validated_data.get("avg_result", instance.avg_result)
         instance.modified_by = self.context["request"].user
         instance.save()

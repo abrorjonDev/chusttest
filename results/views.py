@@ -455,7 +455,6 @@ class OlympicTestDetailView(APIView):
             data = serializer.data
             max_ball = sum([obj.ball*obj.questions_count for obj in olympic_result_obj.olympics.subjects.all() ])
             data["max_ball"] = max_ball
-            print("Maximum ball: ", max_ball)
             return Response(data, status=200)
         return Response(serializer.errors, status=400)
 
