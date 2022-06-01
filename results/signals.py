@@ -27,7 +27,7 @@ def save_new_percentage_value_to_results_table(sender, instance, **kwargs):
         except:
             result_obj = StudentResults.objects.create(subject=instance.subject, created_by=instance.created_by, percentage=round(percentage, 2))
     return instance
-
+ 
 
 @receiver(post_save, sender=StudentResults)
 def save_new_percentage_value_to_monthly_model(sender, instance, created, **kwargs):
@@ -41,4 +41,18 @@ def save_new_percentage_value_to_monthly_model(sender, instance, created, **kwar
     monthly_obj.percentage = percentage
     monthly_obj.month = curr_time.strftime("%B")
     monthly_obj.save()
+    return instance
+
+
+@receiver(post_save, sender=OlympicResults)
+def save_pupil_olympics_total_ball(sender, instance, created, **kwargs):
+    if instance.finished:
+        questions = instance.questions
+        subjects = instance.olympics.subjects.all()
+        ball = 0.0
+        for subject in subjects:
+            right_answers_count = questions.filter(question__subject=subject.subject).count()
+            ball += right_answers_count*subject.ball
+        instance.ball = round(ball, 3)
+        instance.save()
     return instance
