@@ -235,6 +235,8 @@ class OlympicsView(APIView):
     This API is only for admin.
     Only Admin can create and see the olympics objects.
     For seeing and creating the olympics objects login as admin and use the key that was sent in the succesfull login response. 
+    IN POST:
+
     """
     def get_queryset(self):
         return Olympics.objects.all()
@@ -362,16 +364,17 @@ class OlympicTestCreateView(APIView):
 
         #if olympics object is None
         if not olympics:
-            return Response({"detail":"Not found"}, status=400)
+            return Response({"detail":"Not found"}, status=404)
 
         #if the current student has been started the olympics
         olympic_results = OlympicResults.objects.filter(olympics=olympics, created_by=request.user)
         if olympic_results.count()>0:
             student_result_obj = olympic_results.first()
+            # time checking, if now is already in outside of the olympics time duration? 
             if olympics.time_end < timezone.now():
                 student_result_obj.finished = True
                 student_result_obj.save()
-                serializer = OlympicResultsSerializer(student_result_obj, data={"finished":True}, partial=True,  context={"request":request})
+                serializer = self.serializer_class(student_result_obj, data={"finished":True}, partial=True,  context={"request":request})
                 return Response(serializer.data, status=200)
         elif olympics.time_start <= timezone.now() and olympics.time_end > timezone.now():
             student_result_obj = OlympicResults.objects.create(olympics=olympics, created_by=request.user)

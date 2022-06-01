@@ -177,13 +177,6 @@ class OlympicResultsSerializer(serializers.ModelSerializer):
     def update(self, instance, attrs):
         instance.modified_by = self.context["request"].user
         instance.finished = attrs.get("finished", instance.finished)
-        if attrs["finished"]:
-            subjects = instance.olympics.subjects.all()
-            ball = 0.0
-            for subject in subjects:
-                answers = instance.questions.filter(question__subject=subject.subject, student_answer__is_right=True, created_by=instance.created_by)
-                ball += answers.count()*subject.ball
-            instance.ball = round(ball, 2)
         instance.save()
         return instance
 
