@@ -41,18 +41,21 @@ def create_students(id, created_by=None):
     modified_users = []
     users = User.objects.all()
     for dt in data:
-        username =dt[0] #ID
-        full_name = names(dt[1]) #full_name
-        school = dt[13]
-        klass = dt[16]
+        username =dt[4] #ID
+        last_name = dt[1]
+        first_name = dt[2]
+        parent_name = dt[3]
+        # full_name = names(dt[1]) #full_name
+        school = dt[6]
+        klass = dt[7]
         try:
             user = users.get(username=username)
-            if user.first_name != full_name[0]:
-                user.first_name = full_name[0]
-            if user.last_name != full_name[1]:
-                user.last_name = full_name[1]
-            if user.father_name != full_name[2]:
-                user.father_name = full_name[2]
+            if user.first_name != first_name:
+                user.first_name = first_name
+            if user.last_name != last_name:
+                user.last_name = last_name
+            if user.father_name != parent_name:
+                user.father_name = parent_name
             if user.school != school:
                 user.school = school
             if user.klass != klass:
@@ -64,9 +67,9 @@ def create_students(id, created_by=None):
         except:
             user = User(
                 username=username, 
-                first_name=full_name[0], 
-                last_name=full_name[1],
-                father_name=full_name[2],
+                first_name=first_name, 
+                last_name=last_name,
+                father_name=parent_name,
                 school=school,
                 klass=klass
                 )
