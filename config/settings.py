@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'rest_auth',
     'import_export',
-    'djcelery',
+#    'djcelery',
 ]
 SITE_ID = 1
 
